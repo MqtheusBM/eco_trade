@@ -28,24 +28,25 @@ final locationProvider = FutureProvider<Position>((ref) async {
       throw 'A permissão de localização foi negada.';
     }
   }
-  
+
   if (permission == LocationPermission.deniedForever) {
     throw 'A permissão de localização foi negada permanentemente. É necessário ativá-la nas configurações.';
-  } 
+  }
 
   return await Geolocator.getCurrentPosition(
-    desiredAccuracy: LocationAccuracy.high
-  );
+      desiredAccuracy: LocationAccuracy.high);
 });
-
 
 // ===================================================================
 // == Provedores de Autenticação ==
 // ===================================================================
 
-/// Fornece uma instância única do nosso [AuthService].
+/// MODIFICADO: Agora injeta a dependência do ApiService no AuthService.
 final authServiceProvider = Provider<AuthService>((ref) {
-  final authService = AuthService();
+  // Obtém a instância do ApiService (seja o mock ou o real)
+  final apiService = ref.watch(apiServiceProvider);
+  // Cria o AuthService, passando o apiService para ele
+  final authService = AuthService(apiService);
   ref.onDispose(() => authService.dispose());
   return authService;
 });
@@ -60,7 +61,6 @@ final authStateProvider = StreamProvider<AppUser?>((ref) {
 /// Controla o estado de carregamento (ex: true/false) durante operações
 /// de autenticação como login ou registo.
 final authLoadingProvider = StateProvider<bool>((ref) => false);
-
 
 // ===================================================================
 // == Provedores da API ==
@@ -85,27 +85,30 @@ final meusLotesProvider = FutureProvider.autoDispose<List<LoteResumido>>((ref) {
 
 /// Busca a lista de Produtores que manifestaram interesse num lote específico.
 /// O `.family` permite-nos passar o `loteId` como parâmetro.
-final interestedProducersProvider = FutureProvider.autoDispose.family<List<InterestedProducer>, String>((ref, loteId) {
+final interestedProducersProvider = FutureProvider.autoDispose
+    .family<List<InterestedProducer>, String>((ref, loteId) {
   final apiService = ref.watch(apiServiceProvider);
   return apiService.getInterestedProducers(loteId);
 });
 
 /// Busca uma lista de lotes próximos com base na localização do utilizador (Produtor).
 /// O `.family` permite-nos passar as coordenadas como parâmetro.
-final lotesProvider = FutureProvider.autoDispose.family<List<LoteResumido>, ({double lat, double long})>((ref, coords) {
+final lotesProvider = FutureProvider.autoDispose
+    .family<List<LoteResumido>, ({double lat, double long})>((ref, coords) {
   final apiService = ref.watch(apiServiceProvider);
   return apiService.getLotes(lat: coords.lat, long: coords.long);
 });
 
 /// Busca os agendamentos do Produtor, com um filtro opcional por status.
-final producerSchedulingsProvider = FutureProvider.autoDispose.family<List<ProducerScheduling>, String?>((ref, status) {
+final producerSchedulingsProvider = FutureProvider.autoDispose
+    .family<List<ProducerScheduling>, String?>((ref, status) {
   final apiService = ref.watch(apiServiceProvider);
   return apiService.getProducerSchedulings(status: status);
 });
 
 /// Busca os detalhes de um agendamento específico.
-final schedulingDetailsProvider = FutureProvider.autoDispose.family<SchedulingDetails, String>((ref, schedulingId) {
+final schedulingDetailsProvider = FutureProvider.autoDispose
+    .family<SchedulingDetails, String>((ref, schedulingId) {
   final apiService = ref.watch(apiServiceProvider);
   return apiService.getSchedulingDetails(schedulingId);
 });
-

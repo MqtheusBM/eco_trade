@@ -14,6 +14,42 @@ import 'package:intl/intl.dart';
 
 /// Esta classe simula o comportamento da nossa API real.
 class MockApiService implements ApiService {
+  // --- MÉTODOS DE AUTENTICAÇÃO ---
+  @override
+  Future<Map<String, dynamic>> signIn(String email, String password) async {
+    await Future.delayed(const Duration(seconds: 2));
+    print('--- MOCK API: Tentativa de login para o email: $email ---');
+
+    if (email.toLowerCase() == "contato@supermercado.com" && password == "senhaForte123") {
+      print('--- MOCK API: Login bem-sucedido ---');
+      return {
+        "token": "jwt.token.muito.seguro.12345",
+        "user": {
+          "uid": "a1b2c3d4e5f6g7h8",
+          "email": "contato@supermercado.com",
+          "name": "Supermercado Preço Bom",
+          "phone_number": "95991234567",
+          "role": "merchant",
+          "created_at": "2025-09-04T16:55:40.255Z",
+          "tax_id": "12.345.678/0001-99",
+          "legal_name": "Supermercado Preço Bom Ltda.",
+          "address": {
+            "street": "Av. Capitão Ene Garcez",
+            "number": "1234",
+            "neighborhood": "Centro",
+            "city": "Boa Vista",
+            "state": "RR",
+            "zip_code": "69301-160"
+          },
+          "location": {"latitude": 2.8235, "longitude": -60.6758}
+        }
+      };
+    } else {
+      print('--- MOCK API: Credenciais inválidas ---');
+      throw Exception('Credenciais inválidas.');
+    }
+  }
+
   // --- MÉTODOS DO PRODUTOR ---
 
   @override
@@ -297,7 +333,8 @@ class MockApiService implements ApiService {
         "id": "lote_123_abc",
         "status": "confirmed",
         "description_ia": "Lote misto com aprox. 60% folhagens e 40% legumes.",
-        "weight": 50
+        "weight": 50,
+        "imageUrl": "https://placehold.co/400x400/27ae60/ffffff?text=Lote+Detalhe"
       },
       "merchant": {
         "uid": "a1b2c3d4e5f6g7h8",
@@ -352,4 +389,3 @@ Parabéns! Durante este período, a sua atividade resultou num impacto positivo:
     return ImpactReportResponse(report: reportText);
   }
 }
-

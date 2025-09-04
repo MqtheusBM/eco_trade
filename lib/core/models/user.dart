@@ -74,7 +74,7 @@ class Comercio extends AppUser {
   // Construtor para criar um Comercio a partir de um JSON.
   factory Comercio.fromJson(Map<String, dynamic> json) {
     return Comercio(
-      id: json['id'],
+      id: json['uid'], // MODIFICADO: De 'id' para 'uid' para corresponder à API
       email: json['email'],
       name: json['name'],
       phoneNumber: json['phone_number'],
@@ -102,7 +102,7 @@ class Produtor extends AppUser {
 
   factory Produtor.fromJson(Map<String, dynamic> json) {
     return Produtor(
-      id: json['id'],
+      id: json['uid'], // MODIFICADO: De 'id' para 'uid' para consistência
       email: json['email'],
       name: json['name'],
       phoneNumber: json['phone_number'],
@@ -111,4 +111,3 @@ class Produtor extends AppUser {
     );
   }
 }
-

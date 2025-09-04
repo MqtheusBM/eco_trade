@@ -12,6 +12,10 @@ import 'package:eco_trade/core/models/scheduling_details.dart';
 /// deve seguir. Se adicionar um novo método aqui, será obrigado a implementá-lo
 /// tanto no ApiService real como no MockApiService, mantendo o código consistente.
 abstract class ApiService {
+  // --- MÉTODOS DE AUTENTICAÇÃO ---
+  /// Autentica um utilizador e retorna os seus dados e um token.
+  Future<Map<String, dynamic>> signIn(String email, String password);
+
   // --- MÉTODOS DO PRODUTOR ---
 
   /// Busca uma lista de lotes próximos com base na localização do utilizador.
@@ -68,4 +72,3 @@ abstract class ApiService {
   /// Gera um relatório de impacto com base num período de datas.
   Future<ImpactReportResponse> generateImpactReport(ImpactReportRequest request);
 }
-

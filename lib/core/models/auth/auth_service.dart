@@ -1,8 +1,12 @@
 import 'dart:async';
+import 'package:eco_trade/core/api/api_service.dart';
 import 'package:eco_trade/core/models/lote.dart' show Localizacao;
 import 'package:eco_trade/core/models/user.dart';
 
 class AuthService {
+  // Adicionamos uma dependência para o nosso serviço de API
+  final ApiService _apiService;
+
   // Controlador interno para gerir as mudanças de estado.
   final StreamController<AppUser?> _userController =
       StreamController<AppUser?>.broadcast();
@@ -10,28 +14,16 @@ class AuthService {
   // Variável para guardar sempre o estado mais recente do utilizador.
   AppUser? _currentUser;
 
-  // =======================================================================
-  // == ESTA É A CORREÇÃO CRÍTICA ==
-  // =======================================================================
-  /// Um stream que emite o estado de autenticação atual imediatamente
-  /// após ser ouvido, e depois emite quaisquer mudanças futuras.
+  // Stream que notifica os widgets sobre mudanças no estado de autenticação
   Stream<AppUser?> get authStateChanges async* {
-    // 1. Emite o estado atual (que é `null` no arranque) assim que
-    //    alguém (o AuthWrapper) começa a ouvir.
     yield _currentUser;
-
-    // 2. Em seguida, retransmite quaisquer futuras mudanças que aconteçam
-    //    no nosso controlador interno.
     yield* _userController.stream;
   }
-  // =======================================================================
 
-  AuthService() {
-    // O construtor já não precisa de adicionar `null`, pois o getter acima
-    // já trata disso.
-  }
+  // O construtor agora recebe a instância do serviço de API
+  AuthService(this._apiService);
 
-  // --- MÉTODOS DE AUTENTICAÇÃO (sem alterações lógicas) ---
+  // --- MÉTODOS DE AUTENTICAÇÃO ---
 
   Future<void> signUpComercio({
     required String email,
@@ -44,6 +36,7 @@ class AuthService {
     required Localizacao location,
   }) async {
     await Future.delayed(const Duration(seconds: 1));
+    // A lógica de registo (que chamaria a API real) permanece aqui
     _currentUser = Comercio(
       id: 'comercio_${DateTime.now().millisecondsSinceEpoch}',
       email: email,
@@ -66,6 +59,7 @@ class AuthService {
     required List<String> wasteTypes,
   }) async {
     await Future.delayed(const Duration(seconds: 1));
+    // A lógica de registo (que chamaria a API real) permanece aqui
     _currentUser = Produtor(
       id: 'produtor_${DateTime.now().millisecondsSinceEpoch}',
       email: email,
@@ -77,25 +71,29 @@ class AuthService {
     _userController.add(_currentUser);
   }
 
+  /// MÉTODO ATUALIZADO
   Future<void> signIn(String email, String password) async {
-    await Future.delayed(const Duration(seconds: 1));
-    // Simula um login bem-sucedido com um utilizador 'Comercio' para teste
-    _currentUser = Comercio(
-      id: 'user_signed_in',
-      email: email,
-      name: 'Comércio Logado',
-      phoneNumber: '95999999999',
-      taxId: '00.000.000/0001-00',
-      legalName: 'Empresa Exemplo LTDA',
-      address: Address(
-          street: 'Rua Principal',
-          number: '123',
-          neighborhood: 'Centro',
-          city: 'Boa Vista',
-          state: 'RR',
-          zipCode: '69301-000'),
-      location: Localizacao(latitude: 2.8235, longitude: -60.6758),
-    );
+    // 1. Chama o método signIn do nosso serviço de API
+    final response = await _apiService.signIn(email, password);
+
+    // 2. Extrai os dados do utilizador da resposta
+    final userJson = response['user'] as Map<String, dynamic>;
+    final role = userJson['role'] as String;
+
+    // 3. TODO: Armazenar o token de forma segura (ex: flutter_secure_storage)
+    // final token = response['token'] as String;
+    // print('Token recebido: $token');
+
+    // 4. Cria a instância do utilizador correto com base na sua "role"
+    if (role == 'merchant') {
+      _currentUser = Comercio.fromJson(userJson);
+    } else if (role == 'producer') {
+      _currentUser = Produtor.fromJson(userJson);
+    } else {
+      throw Exception('Role de utilizador desconhecida vinda da API: $role');
+    }
+
+    // 5. Notifica o resto da aplicação que o utilizador mudou
     _userController.add(_currentUser);
   }
 

@@ -46,8 +46,9 @@ class Batch {
   final String status;
   final String descriptionIa;
   final int weight;
+  final String imageUrl; // <-- ADICIONADO AQUI
 
-  Batch({required this.id, required this.status, required this.descriptionIa, required this.weight});
+  Batch({required this.id, required this.status, required this.descriptionIa, required this.weight, required this.imageUrl}); // <-- ADICIONADO AQUI
 
   factory Batch.fromJson(Map<String, dynamic> json) {
     return Batch(
@@ -55,6 +56,7 @@ class Batch {
       status: json['status'],
       descriptionIa: json['description_ia'],
       weight: json['weight'],
+      imageUrl: json['imageUrl'] ?? 'https://placehold.co/400x400/cccccc/000000?text=Sem+Imagem', // <-- ADICIONADO AQUI
     );
   }
 }
