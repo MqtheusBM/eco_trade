@@ -7,12 +7,14 @@ import 'package:eco_trade/features/shared/profile_screen.dart';
 import 'package:eco_trade/features/shared/scheduling_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:eco_trade/features/comercio/lot_creation_comercio.dart';
 
 class ComercioDashboardScreen extends ConsumerWidget {
   const ComercioDashboardScreen({super.key});
 
   /// Função para lidar com a ação de finalizar um agendamento.
-  Future<void> _handleFinalizeAction(BuildContext context, WidgetRef ref, String loteId) async {
+  Future<void> _handleFinalizeAction(
+      BuildContext context, WidgetRef ref, String loteId) async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -20,8 +22,9 @@ class ComercioDashboardScreen extends ConsumerWidget {
     );
 
     try {
-      final response = await ref.read(apiServiceProvider).finalizeScheduling(loteId);
-      
+      final response =
+          await ref.read(apiServiceProvider).finalizeScheduling(loteId);
+
       Navigator.of(context).pop(); // Fecha o diálogo de loading
 
       ref.refresh(meusLotesProvider); // Atualiza a lista de lotes
@@ -35,7 +38,9 @@ class ComercioDashboardScreen extends ConsumerWidget {
     } catch (e) {
       Navigator.of(context).pop(); // Fecha o diálogo de loading
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao finalizar: $e'), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text('Erro ao finalizar: $e'),
+            backgroundColor: Colors.red),
       );
     }
   }
@@ -58,13 +63,15 @@ class ComercioDashboardScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('Por favor, avalie a sua experiência com o produtor.'),
+                    const Text(
+                        'Por favor, avalie a sua experiência com o produtor.'),
                     const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(5, (index) {
                         return IconButton(
-                          onPressed: () => setState(() => _rating = index + 1.0),
+                          onPressed: () =>
+                              setState(() => _rating = index + 1.0),
                           icon: Icon(
                             index < _rating ? Icons.star : Icons.star_border,
                             color: Colors.amber,
@@ -87,29 +94,45 @@ class ComercioDashboardScreen extends ConsumerWidget {
               ),
               actions: [
                 TextButton(
-                  onPressed: _isSubmitting ? null : () => Navigator.of(dialogContext).pop(),
+                  onPressed: _isSubmitting
+                      ? null
+                      : () => Navigator.of(dialogContext).pop(),
                   child: const Text('Cancelar'),
                 ),
                 ElevatedButton(
-                  onPressed: _isSubmitting ? null : () async {
-                    setState(() => _isSubmitting = true);
-                    try {
-                      final request = RatingRequest(rating: _rating, comments: _commentsController.text);
-                      final response = await ref.read(apiServiceProvider).rateScheduling(loteId, request);
-                      
-                      Navigator.of(dialogContext).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(response['message']!), backgroundColor: Colors.green),
-                      );
-                    } catch (e) {
-                       Navigator.of(dialogContext).pop();
-                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Erro ao avaliar: $e'), backgroundColor: Colors.red),
-                      );
-                    }
-                  },
+                  onPressed: _isSubmitting
+                      ? null
+                      : () async {
+                          setState(() => _isSubmitting = true);
+                          try {
+                            final request = RatingRequest(
+                                rating: _rating,
+                                comments: _commentsController.text);
+                            final response = await ref
+                                .read(apiServiceProvider)
+                                .rateScheduling(loteId, request);
+
+                            Navigator.of(dialogContext).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text(response['message']!),
+                                  backgroundColor: Colors.green),
+                            );
+                          } catch (e) {
+                            Navigator.of(dialogContext).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text('Erro ao avaliar: $e'),
+                                  backgroundColor: Colors.red),
+                            );
+                          }
+                        },
                   child: _isSubmitting
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
                       : const Text('Enviar Avaliação'),
                 ),
               ],
@@ -171,9 +194,11 @@ class ComercioDashboardScreen extends ConsumerWidget {
               itemBuilder: (context, index) {
                 final lote = lotes[index];
                 return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                   elevation: 4,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15)),
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(12, 12, 0, 12),
                     child: Row(
@@ -187,7 +212,12 @@ class ComercioDashboardScreen extends ConsumerWidget {
                             height: 80,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) =>
-                                Container(width: 80, height: 80, color: Colors.grey.shade200, child: const Icon(Icons.broken_image, color: Colors.grey, size: 40)),
+                                Container(
+                                    width: 80,
+                                    height: 80,
+                                    color: Colors.grey.shade200,
+                                    child: const Icon(Icons.broken_image,
+                                        color: Colors.grey, size: 40)),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -195,13 +225,30 @@ class ComercioDashboardScreen extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(lote.description, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16), maxLines: 3, overflow: TextOverflow.ellipsis),
+                              Text(lote.description,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16),
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis),
                               const SizedBox(height: 8),
                               Chip(
-                                label: Text(lote.status.toUpperCase(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10)),
-                                backgroundColor: lote.status == 'ativo' ? Colors.green : (lote.status == 'confirmado' ? Colors.blue : (lote.status == 'finalizado' ? Colors.grey.shade600 : Colors.orange)),
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                label: Text(lote.status.toUpperCase(),
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 10)),
+                                backgroundColor: lote.status == 'ativo'
+                                    ? Colors.green
+                                    : (lote.status == 'confirmado'
+                                        ? Colors.blue
+                                        : (lote.status == 'finalizado'
+                                            ? Colors.grey.shade600
+                                            : Colors.orange)),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 2),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20)),
                                 side: BorderSide.none,
                               ),
                             ],
@@ -210,42 +257,65 @@ class ComercioDashboardScreen extends ConsumerWidget {
                         PopupMenuButton<String>(
                           onSelected: (value) {
                             if (value == 'interessados') {
-                              Navigator.of(context).push(MaterialPageRoute(builder: (context) => InterestedProducersScreen(loteId: lote.id, loteDescription: lote.description)));
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) =>
+                                      InterestedProducersScreen(
+                                          loteId: lote.id,
+                                          loteDescription: lote.description)));
                             } else if (value == 'analisar') {
-                              Navigator.of(context).push(MaterialPageRoute(builder: (context) => CompostAnalysisScreen(loteId: lote.id, loteDescription: lote.description)));
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) => CompostAnalysisScreen(
+                                      loteId: lote.id,
+                                      loteDescription: lote.description)));
                             } else if (value == 'finalizar') {
                               _handleFinalizeAction(context, ref, lote.id);
                             } else if (value == 'avaliar') {
                               _showRatingDialog(context, ref, lote.id);
                             } else if (value == 'ver_agendamento') {
-                              Navigator.of(context).push(MaterialPageRoute(builder: (context) => SchedulingDetailsScreen(schedulingId: lote.id)));
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) => SchedulingDetailsScreen(
+                                      schedulingId: lote.id)));
                             }
                           },
-                          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                          itemBuilder: (BuildContext context) =>
+                              <PopupMenuEntry<String>>[
                             if (lote.status == 'ativo')
                               const PopupMenuItem<String>(
                                 value: 'interessados',
-                                child: ListTile(leading: Icon(Icons.people), title: Text('Ver Interessados')),
+                                child: ListTile(
+                                    leading: Icon(Icons.people),
+                                    title: Text('Ver Interessados')),
                               ),
-                            if (lote.status == 'confirmado' || lote.status == 'finalizado')
-                               const PopupMenuItem<String>(
+                            if (lote.status == 'confirmado' ||
+                                lote.status == 'finalizado')
+                              const PopupMenuItem<String>(
                                 value: 'ver_agendamento',
-                                child: ListTile(leading: Icon(Icons.calendar_today), title: Text('Ver Agendamento')),
+                                child: ListTile(
+                                    leading: Icon(Icons.calendar_today),
+                                    title: Text('Ver Agendamento')),
                               ),
                             if (lote.status != 'finalizado')
                               const PopupMenuItem<String>(
                                 value: 'analisar',
-                                child: ListTile(leading: Icon(Icons.biotech), title: Text('Analisar Composto')),
+                                child: ListTile(
+                                    leading: Icon(Icons.biotech),
+                                    title: Text('Analisar Composto')),
                               ),
                             if (lote.status == 'confirmado')
                               const PopupMenuItem<String>(
                                 value: 'finalizar',
-                                child: ListTile(leading: Icon(Icons.check_circle, color: Colors.green), title: Text('Finalizar Agendamento')),
+                                child: ListTile(
+                                    leading: Icon(Icons.check_circle,
+                                        color: Colors.green),
+                                    title: Text('Finalizar Agendamento')),
                               ),
                             if (lote.status == 'finalizado')
                               const PopupMenuItem<String>(
                                 value: 'avaliar',
-                                child: ListTile(leading: Icon(Icons.star, color: Colors.amber), title: Text('Avaliar Agendamento')),
+                                child: ListTile(
+                                    leading:
+                                        Icon(Icons.star, color: Colors.amber),
+                                    title: Text('Avaliar Agendamento')),
                               ),
                           ],
                         ),
@@ -260,8 +330,8 @@ class ComercioDashboardScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('A tela de criação de lote será implementada aqui.')),
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => const LotCreationScreen()),
           );
         },
         child: const Icon(Icons.add),
@@ -270,4 +340,3 @@ class ComercioDashboardScreen extends ConsumerWidget {
     );
   }
 }
-
