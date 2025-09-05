@@ -1,5 +1,6 @@
 import 'package:eco_trade/core/models/providers.dart';
 import 'package:eco_trade/features/auth/register_screen.dart';
+import 'package:eco_trade/features/auth/widgets/eco_trade_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -59,12 +60,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(Icons.eco, size: 80, color: Color.fromRGBO(9, 132, 85, 0.8)),
+                // Logotipo customizado
+                const EcoTradeLogo(),
                 const SizedBox(height: 16),
                 const Text(
-                  'Bem-vindo ao EcoTrade',
+                  'Bem-vindo à EcoTrade',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2c5e2e), // Verde escuro do logo
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Conectando comércios e produtores para um futuro mais sustentável.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                  ),
                 ),
                 const SizedBox(height: 32),
                 TextFormField(
@@ -72,10 +87,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email),
+                    prefixIcon: Icon(Icons.email_outlined),
                   ),
                   keyboardType: TextInputType.emailAddress,
-                  validator: (value) => (value?.isEmpty ?? true) ? 'Por favor, insira o seu email' : null,
+                  validator: (value) => (value?.isEmpty ?? true)
+                      ? 'Por favor, insira o seu email'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -83,10 +100,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Senha',
                     border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock),
+                    prefixIcon: Icon(Icons.lock_outline),
                   ),
                   obscureText: true,
-                  validator: (value) => (value?.isEmpty ?? true) ? 'Por favor, insira a sua senha' : null,
+                  validator: (value) => (value?.isEmpty ?? true)
+                      ? 'Por favor, insira a sua senha'
+                      : null,
                 ),
                 const SizedBox(height: 24),
                 _isLoading
@@ -95,15 +114,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         onPressed: _submitForm,
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                          backgroundColor:
+                              const Color(0xFF4CAF50), // Verde do logo
                         ),
-                        child: const Text('Entrar'),
+                        child: const Text(
+                          'Entrar',
+                          style: TextStyle(fontSize: 16),
+                        ),
                       ),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const RegisterScreen()),
                     );
                   },
                   child: const Text('Não tem uma conta? Crie uma'),
@@ -116,4 +142,3 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 }
-
