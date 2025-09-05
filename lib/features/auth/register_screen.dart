@@ -153,7 +153,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           controller: _nameController,
           decoration: InputDecoration(
               labelText: _selectedProfile == ProfileType.comercio
-                  ? 'Nome Fantasia'
+                  ? 'Nome Comércio'
                   : 'Nome Completo',
               border: const OutlineInputBorder()),
           validator: (value) =>
@@ -291,7 +291,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       TextFormField(
           controller: _wasteTypesController,
           decoration: const InputDecoration(
-              labelText: 'Tipos de Resíduos Aceites',
+              labelText: 'Tipos de Resíduos Aceitos',
               helperText: 'Separar por vírgulas (ex: orgânico, plástico)',
               border: OutlineInputBorder()),
           validator: (value) =>
