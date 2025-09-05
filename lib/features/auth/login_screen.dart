@@ -17,6 +17,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
+  // NOVO: Variável para controlar a visibilidade da senha
+  bool _isPasswordVisible = false;
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -28,12 +31,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isLoading = true);
       try {
-        // A chamada ao método signIn está correta e corresponde à definição no AuthService.
         await ref.read(authServiceProvider).signIn(
               _emailController.text,
               _passwordController.text,
             );
-        // Se o login for bem-sucedido, o AuthWrapper tratará da navegação.
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -60,26 +61,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Logotipo customizado
-                const EcoTradeLogo(),
+                const EcoTradeLogo(
+                  height: 100,
+                ),
                 const SizedBox(height: 16),
                 const Text(
                   'Bem-vindo à EcoTrade',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2c5e2e), // Verde escuro do logo
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Conectando comércios e produtores para um futuro mais sustentável.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 32),
                 TextFormField(
@@ -87,7 +82,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email_outlined),
+                    prefixIcon: Icon(Icons.email),
                   ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) => (value?.isEmpty ?? true)
@@ -95,14 +90,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       : null,
                 ),
                 const SizedBox(height: 16),
+                // CAMPO DE SENHA ATUALIZADO
                 TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(
+                  // A visibilidade do texto agora depende da nossa variável de estado
+                  obscureText: !_isPasswordVisible,
+                  decoration: InputDecoration(
                     labelText: 'Senha',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock_outline),
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.lock),
+                    // O ícone que permite alternar a visibilidade
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        // Muda o ícone com base no estado (olho aberto/fechado)
+                        _isPasswordVisible
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        // Atualiza o estado para mostrar/esconder a senha
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;
+                        });
+                      },
+                    ),
                   ),
-                  obscureText: true,
                   validator: (value) => (value?.isEmpty ?? true)
                       ? 'Por favor, insira a sua senha'
                       : null,
@@ -116,13 +128,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8)),
-                          backgroundColor:
-                              const Color(0xFF4CAF50), // Verde do logo
                         ),
-                        child: const Text(
-                          'Entrar',
-                          style: TextStyle(fontSize: 16),
-                        ),
+                        child: const Text('Entrar'),
                       ),
                 const SizedBox(height: 16),
                 TextButton(

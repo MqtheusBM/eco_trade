@@ -7,6 +7,7 @@ import 'package:eco_trade/core/models/rating.dart';
 import 'package:eco_trade/core/models/scheduling_confirmation.dart';
 import 'package:eco_trade/core/models/scheduling_creation.dart';
 import 'package:eco_trade/core/models/scheduling_details.dart';
+import 'package:eco_trade/core/models/user.dart';
 
 /// A interface define o "contrato" que qualquer serviço de API (real ou mock)
 /// deve seguir. Se adicionar um novo método aqui, será obrigado a implementá-lo
@@ -15,6 +16,10 @@ abstract class ApiService {
   // --- MÉTODOS DE AUTENTICAÇÃO ---
   /// Autentica um utilizador e retorna os seus dados e um token.
   Future<Map<String, dynamic>> signIn(String email, String password);
+
+  // ATUALIZADO: Métodos de registro agora retornam um Map, igual ao signIn.
+  Future<Map<String, dynamic>> signUpComercio(Map<String, dynamic> data);
+  Future<Map<String, dynamic>> signUpProdutor(Map<String, dynamic> data);
 
   // --- MÉTODOS DO PRODUTOR ---
 
@@ -72,3 +77,4 @@ abstract class ApiService {
   /// Gera um relatório de impacto com base num período de datas.
   Future<ImpactReportResponse> generateImpactReport(ImpactReportRequest request);
 }
+

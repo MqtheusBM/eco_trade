@@ -8,7 +8,8 @@ import 'package:eco_trade/core/models/rating.dart';
 import 'package:eco_trade/core/models/scheduling_confirmation.dart';
 import 'package:eco_trade/core/models/scheduling_creation.dart';
 // Importa o ficheiro de detalhes, mas esconde as classes com nomes repetidos para evitar conflitos.
-import 'package:eco_trade/core/models/scheduling_details.dart' hide Scheduling, Batch;
+import 'package:eco_trade/core/models/scheduling_details.dart'
+    hide Scheduling, Batch;
 import 'package:eco_trade/core/models/user.dart';
 import 'package:intl/intl.dart';
 
@@ -20,8 +21,27 @@ class MockApiService implements ApiService {
     await Future.delayed(const Duration(seconds: 2));
     print('--- MOCK API: Tentativa de login para o email: $email ---');
 
-    if (email.toLowerCase() == "contato@supermercado.com" && password == "senhaForte123") {
-      print('--- MOCK API: Login bem-sucedido ---');
+    // ATUALIZADO: Adicionado login para o perfil de Produtor
+    if (email.toLowerCase() == "produtor@ecotrade.com" &&
+        password == "senha123") {
+      print('--- MOCK API: Login de Produtor bem-sucedido ---');
+      return {
+        "token": "jwt.token.produtor.67890",
+        "user": {
+          "uid": "p1r2o3d4u5t6o7r8",
+          "email": "produtor@ecotrade.com",
+          "name": "João da Silva",
+          "phone_number": "95987654321",
+          "role":
+              "producer", // O AuthService usa este campo para decidir o ecrã
+          "created_at": "2025-09-05T10:00:00.000Z",
+          "collection_capacity_kg": 250,
+          "accepted_waste_types": ["orgânico", "plástico", "papelão"]
+        }
+      };
+    } else if (email.toLowerCase() == "contato@supermercado.com" &&
+        password == "senhaForte123") {
+      print('--- MOCK API: Login de Comércio bem-sucedido ---');
       return {
         "token": "jwt.token.muito.seguro.12345",
         "user": {
@@ -50,6 +70,45 @@ class MockApiService implements ApiService {
     }
   }
 
+  // ATUALIZADO: Agora retorna um Map, igual ao signIn, para ser mais realista.
+  @override
+  Future<Map<String, dynamic>> signUpComercio(Map<String, dynamic> data) async {
+    await Future.delayed(const Duration(seconds: 2));
+    print('--- MOCK API: A simular registo de Comércio ---');
+    print(data);
+
+    // Simula que o backend criou o utilizador e o retorna.
+    final newUser = {
+      'uid': 'comercio_${DateTime.now().millisecondsSinceEpoch}',
+      'role': 'merchant', // Adiciona a role
+      ...data, // Usa os dados recebidos para preencher o resto
+    };
+
+    return {
+      "token": "jwt.token.novo.utilizador.abcde",
+      "user": newUser,
+    };
+  }
+
+  // ATUALIZADO: Agora retorna um Map, igual ao signIn, para ser mais realista.
+  @override
+  Future<Map<String, dynamic>> signUpProdutor(Map<String, dynamic> data) async {
+    await Future.delayed(const Duration(seconds: 2));
+    print('--- MOCK API: A simular registo de Produtor ---');
+    print(data);
+
+    final newUser = {
+      'uid': 'produtor_${DateTime.now().millisecondsSinceEpoch}',
+      'role': 'producer', // Adiciona a role
+      ...data,
+    };
+
+    return {
+      "token": "jwt.token.novo.utilizador.fghij",
+      "user": newUser,
+    };
+  }
+
   // --- MÉTODOS DO PRODUTOR ---
 
   @override
@@ -67,7 +126,8 @@ class MockApiService implements ApiService {
         location: Localizacao(latitude: 2.8215, longitude: -60.6738),
         distance: '1.2 km',
         status: 'ativo',
-        imageUrl: 'https://placehold.co/400x400/7bed9f/000000?text=Org%C3%A2nicos',
+        imageUrl:
+            'https://placehold.co/400x400/7bed9f/000000?text=Org%C3%A2nicos',
         limitDate: DateTime.now().add(const Duration(days: 7)),
       ),
       LoteResumido(
@@ -90,9 +150,11 @@ class MockApiService implements ApiService {
   }
 
   @override
-  Future<List<ProducerScheduling>> getProducerSchedulings({String? status}) async {
+  Future<List<ProducerScheduling>> getProducerSchedulings(
+      {String? status}) async {
     await Future.delayed(const Duration(seconds: 1));
-    print('--- MOCK API: A buscar agendamentos do produtor com status: ${status ?? "todos"} ---');
+    print(
+        '--- MOCK API: A buscar agendamentos do produtor com status: ${status ?? "todos"} ---');
 
     final allSchedulings = [
       ProducerScheduling(
@@ -101,11 +163,13 @@ class MockApiService implements ApiService {
         scheduledDate: DateTime.now().add(const Duration(days: 2, hours: 4)),
         batchInfo: BatchInfo(
           id: 'lote_xyz123',
-          imageUrl: 'https://placehold.co/400x400/27ae60/ffffff?text=Org%C3%A2nicos',
+          imageUrl:
+              'https://placehold.co/400x400/27ae60/ffffff?text=Org%C3%A2nicos',
           description: 'Lote de orgânicos do Supermercado Centro',
           limitDate: DateTime.now().add(const Duration(days: 5)),
         ),
-        merchantInfo: MerchantInfo(uid: 'comerciante_xyz123', name: 'Supermercado Preço Bom'),
+        merchantInfo: MerchantInfo(
+            uid: 'comerciante_xyz123', name: 'Supermercado Preço Bom'),
       ),
       ProducerScheduling(
         schedulingId: 'agendamento_ghi012',
@@ -117,7 +181,8 @@ class MockApiService implements ApiService {
           description: 'Óleo de cozinha do Restaurante Sabor Divino',
           limitDate: DateTime.now().add(const Duration(days: 3)),
         ),
-        merchantInfo: MerchantInfo(uid: 'comerciante_rst789', name: 'Restaurante Sabor Divino'),
+        merchantInfo: MerchantInfo(
+            uid: 'comerciante_rst789', name: 'Restaurante Sabor Divino'),
       ),
       ProducerScheduling(
         schedulingId: 'agendamento_jkl345',
@@ -129,7 +194,8 @@ class MockApiService implements ApiService {
           description: 'Sucata de metal da Oficina Central',
           limitDate: DateTime.now().add(const Duration(days: 4)),
         ),
-        merchantInfo: MerchantInfo(uid: 'comerciante_mno012', name: 'Oficina Central'),
+        merchantInfo:
+            MerchantInfo(uid: 'comerciante_mno012', name: 'Oficina Central'),
       ),
       ProducerScheduling(
         schedulingId: 'agendamento_pqr678',
@@ -141,7 +207,8 @@ class MockApiService implements ApiService {
           description: 'Resíduos de construção civil',
           limitDate: DateTime.now().subtract(const Duration(days: 1)),
         ),
-        merchantInfo: MerchantInfo(uid: 'comerciante_stu345', name: 'Construtora RR'),
+        merchantInfo:
+            MerchantInfo(uid: 'comerciante_stu345', name: 'Construtora RR'),
       ),
       ProducerScheduling(
         schedulingId: 'agendamento_def789',
@@ -149,25 +216,29 @@ class MockApiService implements ApiService {
         scheduledDate: DateTime.now().subtract(const Duration(days: 4)),
         batchInfo: BatchInfo(
           id: 'lote_uvw456',
-          imageUrl: 'https://placehold.co/400x400/3498db/ffffff?text=Pl%C3%A1stico',
+          imageUrl:
+              'https://placehold.co/400x400/3498db/ffffff?text=Pl%C3%A1stico',
           description: 'Plásticos e papelão da Loja de Embalagens',
           limitDate: DateTime.now().subtract(const Duration(days: 2)),
         ),
-        merchantInfo: MerchantInfo(uid: 'comerciante_uvw456', name: 'Loja de Embalagens'),
+        merchantInfo:
+            MerchantInfo(uid: 'comerciante_uvw456', name: 'Loja de Embalagens'),
       ),
     ];
 
     if (status != null) {
       return allSchedulings.where((s) => s.status == status).toList();
     }
-    
+
     return allSchedulings;
   }
-  
+
   @override
-  Future<SchedulingCreationResponse> createScheduling(SchedulingRequest request) async {
+  Future<SchedulingCreationResponse> createScheduling(
+      SchedulingRequest request) async {
     await Future.delayed(const Duration(seconds: 2));
-    print('--- MOCK API: Criando agendamento para o lote ${request.loteId} ---');
+    print(
+        '--- MOCK API: Criando agendamento para o lote ${request.loteId} ---');
     return SchedulingCreationResponse(
       id: 'agendamento_${DateTime.now().millisecondsSinceEpoch}',
       status: 'aguardando_confirmação',
@@ -208,7 +279,8 @@ class MockApiService implements ApiService {
       LoteResumido(
         id: 'meu_lote_1',
         description: 'Lote de Orgânicos da Semana',
-        distance: '', status: 'ativo',
+        distance: '',
+        status: 'ativo',
         location: Localizacao(latitude: 2.82, longitude: -60.67),
         imageUrl: 'https://placehold.co/400x400/27ae60/ffffff?text=Meu+Lote+1',
         limitDate: DateTime.now().add(const Duration(days: 5)),
@@ -216,15 +288,17 @@ class MockApiService implements ApiService {
       LoteResumido(
         id: 'meu_lote_3',
         description: 'Óleo de Cozinha Usado',
-        distance: '', status: 'confirmado',
+        distance: '',
+        status: 'confirmado',
         location: Localizacao(latitude: 2.82, longitude: -60.67),
         imageUrl: 'https://placehold.co/400x400/8e44ad/ffffff?text=Confirmado',
         limitDate: DateTime.now().add(const Duration(days: 1)),
       ),
-       LoteResumido(
+      LoteResumido(
         id: 'meu_lote_4',
         description: 'Vidros Diversos',
-        distance: '', status: 'finalizado',
+        distance: '',
+        status: 'finalizado',
         location: Localizacao(latitude: 2.82, longitude: -60.67),
         imageUrl: 'https://placehold.co/400x400/bdc3c7/ffffff?text=Finalizado',
         limitDate: DateTime.now().subtract(const Duration(days: 10)),
@@ -235,46 +309,65 @@ class MockApiService implements ApiService {
   @override
   Future<List<InterestedProducer>> getInterestedProducers(String loteId) async {
     await Future.delayed(const Duration(seconds: 2));
-    print('--- MOCK API: A buscar Produtores interessados no lote $loteId. ---');
+    print(
+        '--- MOCK API: A buscar Produtores interessados no lote $loteId. ---');
     return [
       InterestedProducer(
         producerId: 'produtor_123',
         producerName: 'Recicla Roraima LTDA',
         reputation: 4.8,
-        producerAddress: Address(street: 'Rua das Acácias', number: '100', neighborhood: 'Pricumã', city: 'Boa Vista', state: 'RR', zipCode: '69309-500'),
+        producerAddress: Address(
+            street: 'Rua das Acácias',
+            number: '100',
+            neighborhood: 'Pricumã',
+            city: 'Boa Vista',
+            state: 'RR',
+            zipCode: '69309-500'),
       ),
       InterestedProducer(
         producerId: 'produtor_456',
         producerName: 'João da Compostagem',
         reputation: 4.5,
-        producerAddress: Address(street: 'Av. Brigadeiro Eduardo Gomes', number: '500', neighborhood: 'Aeroporto', city: 'Boa Vista', state: 'RR', zipCode: '69310-005'),
+        producerAddress: Address(
+            street: 'Av. Brigadeiro Eduardo Gomes',
+            number: '500',
+            neighborhood: 'Aeroporto',
+            city: 'Boa Vista',
+            state: 'RR',
+            zipCode: '69310-005'),
       ),
     ];
   }
 
   @override
-  Future<CompostAnalysisResponse> analyzeCompost(String loteId, CompostAnalysisRequest request) async {
+  Future<CompostAnalysisResponse> analyzeCompost(
+      String loteId, CompostAnalysisRequest request) async {
     await Future.delayed(const Duration(seconds: 3));
     print('--- MOCK API: Analisando composto para o lote $loteId ---');
     String recommendationText = "Análise baseada nas suas observações:\n\n";
     if (request.observations.toLowerCase().contains('úmida')) {
-      recommendationText += "-> A sua pilha parece estar muito húmida. Adicione mais materiais de carbono, como **${request.availableCarbonMaterials.join(' ou ')}**.\n";
+      recommendationText +=
+          "-> A sua pilha parece estar muito húmida. Adicione mais materiais de carbono, como **${request.availableCarbonMaterials.join(' ou ')}**.\n";
     }
     if (request.observations.toLowerCase().contains('cheiro')) {
-      recommendationText += "-> Odores desagradáveis indicam falta de oxigénio. Revolva a sua pilha com mais frequência.\n";
+      recommendationText +=
+          "-> Odores desagradáveis indicam falta de oxigénio. Revolva a sua pilha com mais frequência.\n";
     }
     return CompostAnalysisResponse(recommendations: recommendationText);
   }
 
   @override
-  Future<SchedulingConfirmation> confirmCollection(String loteId, String producerId) async {
+  Future<SchedulingConfirmation> confirmCollection(
+      String loteId, String producerId) async {
     await Future.delayed(const Duration(seconds: 2));
-    print('--- MOCK API: Confirmando recolha para o lote $loteId com o produtor $producerId ---');
+    print(
+        '--- MOCK API: Confirmando recolha para o lote $loteId com o produtor $producerId ---');
     return SchedulingConfirmation.fromJson({
       "scheduling": {
         "id": "agendamento_abc456",
         "status": "confirmed",
-        "scheduled_date": DateTime.now().add(const Duration(days: 2)).toIso8601String(),
+        "scheduled_date":
+            DateTime.now().add(const Duration(days: 2)).toIso8601String(),
         "producer_id": producerId,
         "merchant_id": "comerciante_xyz123"
       },
@@ -292,7 +385,8 @@ class MockApiService implements ApiService {
       },
       "collection_data": {
         "id": "id_123_abc",
-        "full_address": "Av. Capitão Ene Garcez, 1234, Centro, Boa Vista, RR, 69301-160",
+        "full_address":
+            "Av. Capitão Ene Garcez, 1234, Centro, Boa Vista, RR, 69301-160",
         "company_name": "Supermercado Preço Bom",
         "telephone_phone_number": "9532102030"
       }
@@ -307,10 +401,13 @@ class MockApiService implements ApiService {
   }
 
   @override
-  Future<Map<String, dynamic>> rateScheduling(String schedulingId, RatingRequest request) async {
+  Future<Map<String, dynamic>> rateScheduling(
+      String schedulingId, RatingRequest request) async {
     await Future.delayed(const Duration(seconds: 2));
-    print('--- MOCK API: Recebendo avaliação para o agendamento $schedulingId ---');
-    print('--- DADOS: Avaliação de ${request.rating} estrelas, Comentário: "${request.comments}" ---');
+    print(
+        '--- MOCK API: Recebendo avaliação para o agendamento $schedulingId ---');
+    print(
+        '--- DADOS: Avaliação de ${request.rating} estrelas, Comentário: "${request.comments}" ---');
     return {"message": "Avaliação realizada com sucesso."};
   }
 
@@ -319,7 +416,8 @@ class MockApiService implements ApiService {
   @override
   Future<SchedulingDetails> getSchedulingDetails(String schedulingId) async {
     await Future.delayed(const Duration(seconds: 2));
-    print('--- MOCK API: A buscar detalhes para o agendamento $schedulingId ---');
+    print(
+        '--- MOCK API: A buscar detalhes para o agendamento $schedulingId ---');
 
     return SchedulingDetails.fromJson({
       "scheduling": {
@@ -334,7 +432,8 @@ class MockApiService implements ApiService {
         "status": "confirmed",
         "description_ia": "Lote misto com aprox. 60% folhagens e 40% legumes.",
         "weight": 50,
-        "imageUrl": "https://placehold.co/400x400/27ae60/ffffff?text=Lote+Detalhe"
+        "imageUrl":
+            "https://placehold.co/400x400/27ae60/ffffff?text=Lote+Detalhe"
       },
       "merchant": {
         "uid": "a1b2c3d4e5f6g7h8",
@@ -353,19 +452,18 @@ class MockApiService implements ApiService {
           "state": "RR",
           "zip_code": "69301-160"
         },
-        "location": {
-          "latitude": 2.8235,
-          "longitude": -60.6758
-        }
+        "location": {"latitude": 2.8235, "longitude": -60.6758}
       }
     });
   }
 
   @override
-  Future<ImpactReportResponse> generateImpactReport(ImpactReportRequest request) async {
+  Future<ImpactReportResponse> generateImpactReport(
+      ImpactReportRequest request) async {
     await Future.delayed(const Duration(seconds: 3));
-    print('--- MOCK API: Gerando relatório de impacto de ${request.startDate} a ${request.endDate} ---');
-    
+    print(
+        '--- MOCK API: Gerando relatório de impacto de ${request.startDate} a ${request.endDate} ---');
+
     final formatter = DateFormat('dd/MM/yyyy');
     final String startDateFormatted = formatter.format(request.startDate);
     final String endDateFormatted = formatter.format(request.endDate);

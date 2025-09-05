@@ -31,6 +31,17 @@ class Address {
       zipCode: json['zip_code'],
     );
   }
+  // ATUALIZADO: Adicionado método toJson para enviar dados para a API
+  Map<String, dynamic> toJson() {
+    return {
+      'street': street,
+      'number': number,
+      'neighborhood': neighborhood,
+      'city': city,
+      'state': state,
+      'zip_code': zipCode,
+    };
+  }
 }
 
 // Classe base para todos os utilizadores.
@@ -84,6 +95,19 @@ class Comercio extends AppUser {
       location: Localizacao.fromJson(json['location']),
     );
   }
+  // ATUALIZADO: Adicionado método toJson para enviar dados para a API
+  Map<String, dynamic> toJson() {
+    return {
+      'email': email,
+      'name': name,
+      'phone_number': phoneNumber,
+      'tax_id': taxId,
+      'legal_name': legalName,
+      'address': address.toJson(),
+      'location': location.toJson(),
+      'role': 'merchant',
+    };
+  }
 }
 
 // Classe Produtor (sem alterações).
@@ -110,4 +134,16 @@ class Produtor extends AppUser {
       acceptedWasteTypes: List<String>.from(json['accepted_waste_types']),
     );
   }
+  // ATUALIZADO: Adicionado método toJson para enviar dados para a API
+  Map<String, dynamic> toJson() {
+    return {
+      'email': email,
+      'name': name,
+      'phone_number': phoneNumber,
+      'collection_capacity_kg': collectionCapacityKg,
+      'accepted_waste_types': acceptedWasteTypes,
+      'role': 'producer',
+    };
+  }
 }
+

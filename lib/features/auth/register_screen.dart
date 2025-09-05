@@ -15,10 +15,9 @@ class RegisterScreen extends ConsumerStatefulWidget {
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   ProfileType _selectedProfile = ProfileType.comercio;
-  // REMOVIDO: A variável local `_isLoading` já não é necessária.
-  // bool _isLoading = false;
+  bool _isPasswordVisible = false;
 
-  // Controladores de texto (sem alterações)
+  // Controladores de texto
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
@@ -37,7 +36,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   void dispose() {
-    // ... dispose de todos os controladores ...
     _emailController.dispose();
     _passwordController.dispose();
     _nameController.dispose();
@@ -58,7 +56,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _submitForm() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    // ALTERADO: Em vez de `setState`, agora atualizamos o provedor.
     ref.read(authLoadingProvider.notifier).state = true;
 
     try {
@@ -94,6 +91,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 .map((e) => e.trim())
                 .toList());
       }
+      // Se o registo for bem-sucedido, o AuthWrapper tratará da navegação.
     } catch (e, stackTrace) {
       if (mounted) {
         debugPrint('Erro detalhado ao registar: $e');
@@ -102,32 +100,54 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             SnackBar(content: Text('Ocorreu um erro inesperado: $e')));
       }
     } finally {
-      // ALTERADO: Atualizamos o provedor no bloco `finally`.
-      // A verificação `mounted` já não é estritamente necessária aqui, mas é uma boa prática.
       if (mounted) {
         ref.read(authLoadingProvider.notifier).state = false;
       }
     }
   }
 
-  // Métodos _build... (sem alterações)
+  // Métodos _build...
   List<Widget> _buildCommonFields() {
     return [
       TextFormField(
-          controller: _emailController,
-          decoration: const InputDecoration(
-              labelText: 'Email', border: OutlineInputBorder()),
-          keyboardType: TextInputType.emailAddress,
-          validator: (value) =>
-              (value?.isEmpty ?? true) ? 'Campo obrigatório' : null),
+        controller: _emailController,
+        decoration: const InputDecoration(
+            labelText: 'Email', border: OutlineInputBorder()),
+        keyboardType: TextInputType.emailAddress,
+        // ATUALIZADO: Validação de email aprimorada.
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Campo obrigatório';
+          }
+          // Expressão regular para validar o formato do email.
+          final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+          if (!emailRegex.hasMatch(value)) {
+            return 'Por favor, insira um email válido';
+          }
+          return null;
+        },
+      ),
       const SizedBox(height: 12),
       TextFormField(
-          controller: _passwordController,
-          decoration: const InputDecoration(
-              labelText: 'Senha', border: OutlineInputBorder()),
-          obscureText: true,
-          validator: (value) =>
-              (value?.isEmpty ?? true) ? 'Campo obrigatório' : null),
+        controller: _passwordController,
+        decoration: InputDecoration(
+          labelText: 'Senha',
+          border: const OutlineInputBorder(),
+          suffixIcon: IconButton(
+            icon: Icon(
+              _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+            ),
+            onPressed: () {
+              setState(() {
+                _isPasswordVisible = !_isPasswordVisible;
+              });
+            },
+          ),
+        ),
+        obscureText: !_isPasswordVisible,
+        validator: (value) =>
+            (value?.isEmpty ?? true) ? 'Campo obrigatório' : null,
+      ),
       const SizedBox(height: 12),
       TextFormField(
           controller: _nameController,
@@ -180,20 +200,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       TextFormField(
           controller: _streetController,
           decoration: const InputDecoration(
-              labelText: 'Rua/Avenida', border: OutlineInputBorder())),
+              labelText: 'Rua/Avenida', border: OutlineInputBorder()),
+          validator: (value) =>
+              (value?.isEmpty ?? true) ? 'Campo obrigatório' : null),
       const SizedBox(height: 12),
       Row(children: [
         Expanded(
             child: TextFormField(
                 controller: _numberController,
                 decoration: const InputDecoration(
-                    labelText: 'Número', border: OutlineInputBorder()))),
+                    labelText: 'Número', border: OutlineInputBorder()),
+                validator: (value) =>
+                    (value?.isEmpty ?? true) ? 'Campo obrigatório' : null)),
         const SizedBox(width: 12),
         Expanded(
             child: TextFormField(
                 controller: _neighborhoodController,
                 decoration: const InputDecoration(
-                    labelText: 'Bairro', border: OutlineInputBorder())))
+                    labelText: 'Bairro', border: OutlineInputBorder()),
+                validator: (value) =>
+                    (value?.isEmpty ?? true) ? 'Campo obrigatório' : null)),
       ]),
       const SizedBox(height: 12),
       Row(children: [
@@ -201,20 +227,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             child: TextFormField(
                 controller: _cityController,
                 decoration: const InputDecoration(
-                    labelText: 'Cidade', border: OutlineInputBorder()))),
+                    labelText: 'Cidade', border: OutlineInputBorder()),
+                validator: (value) =>
+                    (value?.isEmpty ?? true) ? 'Campo obrigatório' : null)),
         const SizedBox(width: 12),
         SizedBox(
             width: 80,
             child: TextFormField(
                 controller: _stateController,
                 decoration: const InputDecoration(
-                    labelText: 'Estado', border: OutlineInputBorder())))
+                    labelText: 'Estado', border: OutlineInputBorder()),
+                validator: (value) =>
+                    (value?.isEmpty ?? true) ? 'Campo obrigatório' : null)),
       ]),
       const SizedBox(height: 12),
       TextFormField(
           controller: _zipCodeController,
           decoration: const InputDecoration(
-              labelText: 'CEP', border: OutlineInputBorder())),
+              labelText: 'CEP', border: OutlineInputBorder()),
+          validator: (value) =>
+              (value?.isEmpty ?? true) ? 'Campo obrigatório' : null),
       const SizedBox(height: 16),
       const Text('Marque a sua localização no mapa:',
           style: TextStyle(fontWeight: FontWeight.bold)),
@@ -252,20 +284,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           decoration: const InputDecoration(
               labelText: 'Capacidade de Recolha (Kg)',
               border: OutlineInputBorder()),
-          keyboardType: TextInputType.number),
+          keyboardType: TextInputType.number,
+          validator: (value) =>
+              (value?.isEmpty ?? true) ? 'Campo obrigatório' : null),
       const SizedBox(height: 12),
       TextFormField(
           controller: _wasteTypesController,
           decoration: const InputDecoration(
               labelText: 'Tipos de Resíduos Aceites',
               helperText: 'Separar por vírgulas (ex: orgânico, plástico)',
-              border: OutlineInputBorder())),
+              border: OutlineInputBorder()),
+          validator: (value) =>
+              (value?.isEmpty ?? true) ? 'Campo obrigatório' : null),
     ];
   }
 
   @override
   Widget build(BuildContext context) {
-    // ALTERADO: Agora "ouvimos" o provedor para obter o estado de carregamento.
     final isLoading = ref.watch(authLoadingProvider);
 
     return Scaffold(
@@ -300,7 +335,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               if (_selectedProfile == ProfileType.produtor)
                 ..._buildProdutorFields(),
               const SizedBox(height: 24),
-              // ALTERADO: O botão agora usa o `isLoading` do provedor.
               isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : ElevatedButton(

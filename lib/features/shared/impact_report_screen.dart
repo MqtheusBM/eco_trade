@@ -3,6 +3,7 @@ import 'package:eco_trade/core/models/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 class ImpactReportScreen extends ConsumerStatefulWidget {
   const ImpactReportScreen({super.key});
@@ -40,13 +41,16 @@ class _ImpactReportScreenState extends ConsumerState<ImpactReportScreen> {
   Future<void> _generateReport() async {
     if (_startDate == null || _endDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, selecione a data de início e de fim.')),
+        const SnackBar(
+            content: Text('Por favor, selecione a data de início e de fim.')),
       );
       return;
     }
     if (_startDate!.isAfter(_endDate!)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('A data de início não pode ser posterior à data de fim.')),
+        const SnackBar(
+            content:
+                Text('A data de início não pode ser posterior à data de fim.')),
       );
       return;
     }
@@ -58,8 +62,10 @@ class _ImpactReportScreenState extends ConsumerState<ImpactReportScreen> {
     });
 
     try {
-      final request = ImpactReportRequest(startDate: _startDate!, endDate: _endDate!);
-      final response = await ref.read(apiServiceProvider).generateImpactReport(request);
+      final request =
+          ImpactReportRequest(startDate: _startDate!, endDate: _endDate!);
+      final response =
+          await ref.read(apiServiceProvider).generateImpactReport(request);
       setState(() => _reportResult = response.report);
     } catch (e) {
       setState(() => _error = 'Falha ao gerar o relatório: $e');
@@ -77,7 +83,9 @@ class _ImpactReportScreenState extends ConsumerState<ImpactReportScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            const Text('Selecione o período para gerar o seu relatório de impacto ambiental.', textAlign: TextAlign.center),
+            const Text(
+                'Selecione o período para gerar o seu relatório de impacto ambiental.',
+                textAlign: TextAlign.center),
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -103,7 +111,8 @@ class _ImpactReportScreenState extends ConsumerState<ImpactReportScreen> {
                 onPressed: _isLoading ? null : _generateReport,
                 icon: const Icon(Icons.assessment),
                 label: const Text('Gerar Relatório'),
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+                style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16)),
               ),
             ),
             const SizedBox(height: 24),
@@ -121,7 +130,7 @@ class _ImpactReportScreenState extends ConsumerState<ImpactReportScreen> {
                 margin: const EdgeInsets.symmetric(vertical: 16),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Text(_reportResult!),
+                  child: MarkdownBody(data: _reportResult!),
                 ),
               ),
           ],

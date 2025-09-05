@@ -11,6 +11,14 @@ class Localizacao {
       longitude: (json['longitude'] as num).toDouble(),
     );
   }
+
+  // ATUALIZADO: Este método é essencial para o user.dart funcionar.
+  Map<String, dynamic> toJson() {
+    return {
+      'latitude': latitude,
+      'longitude': longitude,
+    };
+  }
 }
 
 /// Representa um lote completo, geralmente recebido após a criação.
@@ -54,7 +62,6 @@ class LoteResumido {
   final String distance;
   final String status;
   final String imageUrl;
-  // NOVO: Adicionámos a data limite aqui.
   final DateTime limitDate;
 
   LoteResumido({
@@ -64,7 +71,7 @@ class LoteResumido {
     required this.distance,
     required this.status,
     required this.imageUrl,
-    required this.limitDate, // Adicionado ao construtor
+    required this.limitDate,
   });
 
   factory LoteResumido.fromJson(Map<String, dynamic> json) {
@@ -75,8 +82,8 @@ class LoteResumido {
       distance: json['distance'],
       status: json['status'],
       imageUrl: json['imageUrl'],
-      // Adicionado ao método de conversão
       limitDate: DateTime.parse(json['limitDate']),
     );
   }
 }
+

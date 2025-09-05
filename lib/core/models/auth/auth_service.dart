@@ -25,6 +25,7 @@ class AuthService {
 
   // --- MÉTODOS DE AUTENTICAÇÃO ---
 
+  // ATUALIZADO: Agora usa a resposta padronizada da API.
   Future<void> signUpComercio({
     required String email,
     required String password,
@@ -35,10 +36,8 @@ class AuthService {
     required Address address,
     required Localizacao location,
   }) async {
-    await Future.delayed(const Duration(seconds: 1));
-    // A lógica de registo (que chamaria a API real) permanece aqui
-    _currentUser = Comercio(
-      id: 'comercio_${DateTime.now().millisecondsSinceEpoch}',
+    final newComercio = Comercio(
+      id: '', // A ser gerado pelo backend
       email: email,
       name: name,
       phoneNumber: phoneNumber,
@@ -47,9 +46,19 @@ class AuthService {
       address: address,
       location: location,
     );
+
+    // Adiciona a senha ao mapa de dados a ser enviado
+    final dataToSend = newComercio.toJson()..['password'] = password;
+
+    // A API agora retorna um Map, tal como o signIn
+    final response = await _apiService.signUpComercio(dataToSend);
+    final userJson = response['user'] as Map<String, dynamic>;
+
+    _currentUser = Comercio.fromJson(userJson);
     _userController.add(_currentUser);
   }
 
+  // ATUALIZADO: Agora usa a resposta padronizada da API.
   Future<void> signUpProdutor({
     required String email,
     required String password,
@@ -58,16 +67,20 @@ class AuthService {
     required int collectionCapacity,
     required List<String> wasteTypes,
   }) async {
-    await Future.delayed(const Duration(seconds: 1));
-    // A lógica de registo (que chamaria a API real) permanece aqui
-    _currentUser = Produtor(
-      id: 'produtor_${DateTime.now().millisecondsSinceEpoch}',
+    final newProdutor = Produtor(
+      id: '', // A ser gerado pelo backend
       email: email,
       name: name,
       phoneNumber: phoneNumber,
       collectionCapacityKg: collectionCapacity,
       acceptedWasteTypes: wasteTypes,
     );
+    final dataToSend = newProdutor.toJson()..['password'] = password;
+
+    final response = await _apiService.signUpProdutor(dataToSend);
+    final userJson = response['user'] as Map<String, dynamic>;
+
+    _currentUser = Produtor.fromJson(userJson);
     _userController.add(_currentUser);
   }
 
@@ -106,3 +119,4 @@ class AuthService {
     _userController.close();
   }
 }
+

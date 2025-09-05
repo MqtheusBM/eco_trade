@@ -1,6 +1,7 @@
 import 'package:eco_trade/core/models/auth/auth_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 /// O ponto de entrada principal da aplicação.
 void main() {
   // É uma boa prática garantir que os "bindings" do Flutter estão inicializados
