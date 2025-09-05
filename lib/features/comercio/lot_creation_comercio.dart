@@ -125,7 +125,7 @@ class _LotCreationScreenState extends ConsumerState<LotCreationScreen> {
           SnackBar(
               content:
                   Text('Lote "${newLote.descriptionAI}" criado com sucesso!'),
-              backgroundColor: Colors.green),
+              backgroundColor: const Color.fromRGBO(9, 132, 85, 0.8)),
         );
         Navigator.of(context).pop();
       }

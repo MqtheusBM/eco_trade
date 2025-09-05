@@ -116,7 +116,7 @@ class ComercioDashboardScreen extends ConsumerWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                   content: Text(response['message']!),
-                                  backgroundColor: Colors.green),
+                                  backgroundColor: const Color.fromRGBO(9, 132, 85, 0.8)),
                             );
                           } catch (e) {
                             Navigator.of(dialogContext).pop();
@@ -239,7 +239,7 @@ class ComercioDashboardScreen extends ConsumerWidget {
                                         fontWeight: FontWeight.bold,
                                         fontSize: 10)),
                                 backgroundColor: lote.status == 'ativo'
-                                    ? Colors.green
+                                    ? const Color.fromRGBO(9, 132, 85, 0.8)
                                     : (lote.status == 'confirmado'
                                         ? Colors.blue
                                         : (lote.status == 'finalizado'
@@ -306,7 +306,7 @@ class ComercioDashboardScreen extends ConsumerWidget {
                                 value: 'finalizar',
                                 child: ListTile(
                                     leading: Icon(Icons.check_circle,
-                                        color: Colors.green),
+                                        color: Color.fromRGBO(9, 132, 85, 0.8)),
                                     title: Text('Finalizar Agendamento')),
                               ),
                             if (lote.status == 'finalizado')

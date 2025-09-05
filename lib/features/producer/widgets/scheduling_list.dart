@@ -95,7 +95,7 @@ class _SchedulingListState extends ConsumerState<SchedulingList> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                   content: Text(response['message']!),
-                                  backgroundColor: Colors.green),
+                                  backgroundColor: const Color.fromRGBO(9, 132, 85, 0.8)),
                             );
                           } catch (e) {
                             Navigator.of(dialogContext).pop();
@@ -251,7 +251,7 @@ class _SchedulingListState extends ConsumerState<SchedulingList> {
       case 'aguardando_confirmação':
         return Colors.orange;
       case 'confirmado':
-        return Colors.green;
+        return const Color.fromRGBO(9, 132, 85, 0.8);
       case 'rejeitado':
         return Colors.red;
       case 'finalizado':

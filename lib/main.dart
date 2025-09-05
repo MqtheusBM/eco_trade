@@ -28,20 +28,21 @@ class MyApp extends StatelessWidget {
       title: 'Eco Trade',
       // Um tema moderno e consistente usando o design Material 3.
       theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+          colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color.fromRGBO(9, 132, 85, 0.8)),
           useMaterial3: true,
           appBarTheme: const AppBarTheme(
-            backgroundColor: Colors.green,
+            backgroundColor: Color.fromRGBO(9, 132, 85, 0.8),
             foregroundColor: Colors.white, // Cor do texto e ícones na AppBar
           ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
+              backgroundColor: const Color.fromRGBO(9, 132, 85, 0.8),
               foregroundColor: Colors.white,
             ),
           ),
           chipTheme: ChipThemeData(
-            selectedColor: Colors.green.shade600,
+            selectedColor: const Color.fromRGBO(9, 132, 85, 0.8),
             labelStyle: const TextStyle(color: Colors.black87),
             secondaryLabelStyle: const TextStyle(color: Colors.white),
             padding: const EdgeInsets.symmetric(horizontal: 12.0),

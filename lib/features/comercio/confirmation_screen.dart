@@ -21,7 +21,7 @@ class ConfirmationScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(Icons.check_circle, color: Colors.green, size: 80),
+            const Icon(Icons.check_circle, color: Color.fromRGBO(9, 132, 85, 0.8), size: 80),
             const SizedBox(height: 16),
             const Text(
               'Recolha agendada com sucesso!',

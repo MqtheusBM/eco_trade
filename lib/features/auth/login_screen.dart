@@ -59,7 +59,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(Icons.eco, size: 80, color: Colors.green),
+                const Icon(Icons.eco, size: 80, color: Color.fromRGBO(9, 132, 85, 0.8)),
                 const SizedBox(height: 16),
                 const Text(
                   'Bem-vindo ao EcoTrade',

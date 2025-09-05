@@ -100,7 +100,7 @@ class SchedulingDetailsScreen extends ConsumerWidget {
                           style: const TextStyle(
                               color: Colors.white, fontWeight: FontWeight.bold),
                         ),
-                        backgroundColor: Colors.green,
+                        backgroundColor: const Color.fromRGBO(9, 132, 85, 0.8),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 8),
                       ),

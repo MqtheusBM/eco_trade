@@ -83,7 +83,7 @@ class _LotDetailsScreenState extends ConsumerState<LotDetailsScreen> {
           SnackBar(
             content: Text(
                 'Agendamento proposto com sucesso para ${DateFormat('dd/MM/yy HH:mm').format(response.scheduledDate)}!'),
-            backgroundColor: Colors.green,
+            backgroundColor: const Color.fromRGBO(9, 132, 85, 0.8),
           ),
         );
         // Fecha a tela de detalhes após o sucesso.

@@ -103,7 +103,7 @@ class ProfileScreen extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(icon, color: Colors.green),
+                Icon(icon, color: const Color.fromRGBO(9, 132, 85, 0.8)),
                 const SizedBox(width: 8),
                 Text(title,
                     style: const TextStyle(
