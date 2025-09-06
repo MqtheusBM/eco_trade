@@ -32,7 +32,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _zipCodeController = TextEditingController();
   LatLng _selectedLocation = const LatLng(2.8235, -60.6758);
   final _capacityController = TextEditingController();
-  final _wasteTypesController = TextEditingController();
+
+  // Estado para os tipos de resíduos do Produtor
+  Set<String> _selectedWasteTypes = {};
+  bool _otherWasteTypeSelected = false;
+  final _otherWasteTypeController = TextEditingController();
 
   @override
   void dispose() {
@@ -49,12 +53,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _stateController.dispose();
     _zipCodeController.dispose();
     _capacityController.dispose();
-    _wasteTypesController.dispose();
+    _otherWasteTypeController.dispose();
     super.dispose();
   }
 
   Future<void> _submitForm() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final List<String> finalWasteTypes = _selectedWasteTypes.toList();
+    if (_otherWasteTypeSelected) {
+      if (_otherWasteTypeController.text.isNotEmpty) {
+        finalWasteTypes.add(_otherWasteTypeController.text.trim());
+      }
+    }
+
+    if (_selectedProfile == ProfileType.produtor && finalWasteTypes.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content:
+                Text('Por favor, selecione pelo menos um tipo de resíduo.')),
+      );
+      return;
+    }
 
     ref.read(authLoadingProvider.notifier).state = true;
 
@@ -71,27 +91,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             latitude: _selectedLocation.latitude,
             longitude: _selectedLocation.longitude);
         await ref.read(authServiceProvider).signUpComercio(
-            email: _emailController.text,
-            password: _passwordController.text,
-            name: _nameController.text,
-            phoneNumber: _phoneController.text,
-            taxId: _taxIdController.text,
-            legalName: _legalNameController.text,
-            address: address,
-            location: location);
+              email: _emailController.text,
+              password: _passwordController.text,
+              name: _nameController.text,
+              phoneNumber: _phoneController.text,
+              taxId: _taxIdController.text,
+              legalName: _legalNameController.text,
+              address: address,
+              location: location,
+            );
       } else {
         await ref.read(authServiceProvider).signUpProdutor(
-            email: _emailController.text,
-            password: _passwordController.text,
-            name: _nameController.text,
-            phoneNumber: _phoneController.text,
-            collectionCapacity: int.tryParse(_capacityController.text) ?? 0,
-            wasteTypes: _wasteTypesController.text
-                .split(',')
-                .map((e) => e.trim())
-                .toList());
+              email: _emailController.text,
+              password: _passwordController.text,
+              name: _nameController.text,
+              phoneNumber: _phoneController.text,
+              collectionCapacity: int.tryParse(_capacityController.text) ?? 0,
+              wasteTypes: finalWasteTypes,
+            );
       }
-      // Se o registo for bem-sucedido, o AuthWrapper tratará da navegação.
     } catch (e, stackTrace) {
       if (mounted) {
         debugPrint('Erro detalhado ao registar: $e');
@@ -106,7 +124,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
   }
 
-  // Métodos _build...
   List<Widget> _buildCommonFields() {
     return [
       TextFormField(
@@ -114,12 +131,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         decoration: const InputDecoration(
             labelText: 'Email', border: OutlineInputBorder()),
         keyboardType: TextInputType.emailAddress,
-        // ATUALIZADO: Validação de email aprimorada.
         validator: (value) {
           if (value == null || value.isEmpty) {
             return 'Campo obrigatório';
           }
-          // Expressão regular para validar o formato do email.
           final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
           if (!emailRegex.hasMatch(value)) {
             return 'Por favor, insira um email válido';
@@ -153,7 +168,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           controller: _nameController,
           decoration: InputDecoration(
               labelText: _selectedProfile == ProfileType.comercio
-                  ? 'Nome Comércio'
+                  ? 'Nome Fantasia'
                   : 'Nome Completo',
               border: const OutlineInputBorder()),
           validator: (value) =>
@@ -276,6 +291,114 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     ];
   }
 
+  // ATUALIZADO: Lógica de seleção de resíduos movida para um diálogo
+  Future<void> _showWasteTypeDialog() async {
+    final tempSelectedTypes = Set<String>.from(_selectedWasteTypes);
+    bool tempOtherSelected = _otherWasteTypeSelected;
+    final tempOtherController =
+        TextEditingController(text: _otherWasteTypeController.text);
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Selecione os Tipos de Resíduo'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CheckboxListTile(
+                      title: const Text('Orgânico'),
+                      value: tempSelectedTypes.contains('orgânico'),
+                      onChanged: (bool? value) {
+                        setDialogState(() {
+                          if (value == true) {
+                            tempSelectedTypes.add('orgânico');
+                          } else {
+                            tempSelectedTypes.remove('orgânico');
+                          }
+                        });
+                      },
+                    ),
+                    CheckboxListTile(
+                      title: const Text('Plástico'),
+                      value: tempSelectedTypes.contains('plástico'),
+                      onChanged: (bool? value) {
+                        setDialogState(() {
+                          if (value == true) {
+                            tempSelectedTypes.add('plástico');
+                          } else {
+                            tempSelectedTypes.remove('plástico');
+                          }
+                        });
+                      },
+                    ),
+                    CheckboxListTile(
+                      title: const Text('Outros'),
+                      value: tempOtherSelected,
+                      onChanged: (bool? value) {
+                        setDialogState(() {
+                          tempOtherSelected = value ?? false;
+                        });
+                      },
+                    ),
+                    if (tempOtherSelected)
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            top: 8.0, left: 16.0, right: 16.0),
+                        child: TextFormField(
+                          controller: tempOtherController,
+                          decoration: const InputDecoration(
+                            labelText: 'Especifique o tipo',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Confirmar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result == true) {
+      setState(() {
+        _selectedWasteTypes = tempSelectedTypes;
+        _otherWasteTypeSelected = tempOtherSelected;
+        _otherWasteTypeController.text = tempOtherController.text;
+        if (!_otherWasteTypeSelected) {
+          _otherWasteTypeController.clear();
+        }
+      });
+    }
+  }
+
+  String _buildSelectedTypesText() {
+    if (_selectedWasteTypes.isEmpty && !_otherWasteTypeSelected) {
+      return 'Nenhum selecionado';
+    }
+    final displayTypes = _selectedWasteTypes.toList();
+    if (_otherWasteTypeSelected) {
+      final otherText = _otherWasteTypeController.text.trim();
+      displayTypes.add(otherText.isNotEmpty ? otherText : 'Outros');
+    }
+    return displayTypes.join(', ');
+  }
+
   List<Widget> _buildProdutorFields() {
     return [
       const SizedBox(height: 12),
@@ -287,15 +410,46 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           keyboardType: TextInputType.number,
           validator: (value) =>
               (value?.isEmpty ?? true) ? 'Campo obrigatório' : null),
-      const SizedBox(height: 12),
-      TextFormField(
-          controller: _wasteTypesController,
+      const SizedBox(height: 16),
+      const Divider(),
+      // ATUALIZADO: Campo de seleção que abre o diálogo
+      InkWell(
+        onTap: _showWasteTypeDialog,
+        child: InputDecorator(
           decoration: const InputDecoration(
-              labelText: 'Tipos de Resíduos Aceitos',
-              helperText: 'Separar por vírgulas (ex: orgânico, plástico)',
-              border: OutlineInputBorder()),
-          validator: (value) =>
-              (value?.isEmpty ?? true) ? 'Campo obrigatório' : null),
+            labelText: 'Tipos de Resíduos Aceites',
+            border: OutlineInputBorder(),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                  child: Text(_buildSelectedTypesText(),
+                      overflow: TextOverflow.ellipsis)),
+              const Icon(Icons.arrow_drop_down),
+            ],
+          ),
+        ),
+      ),
+      // Mostra o campo de texto de "Outros" diretamente na tela se a opção
+      // estiver selecionada, para facilitar a edição.
+      if (_otherWasteTypeSelected)
+        Padding(
+          padding: const EdgeInsets.only(top: 12.0),
+          child: TextFormField(
+            controller: _otherWasteTypeController,
+            decoration: const InputDecoration(
+              labelText: 'Especifique qual o "Outro" tipo',
+              border: OutlineInputBorder(),
+            ),
+            validator: (value) {
+              if (_otherWasteTypeSelected && (value == null || value.isEmpty)) {
+                return 'Por favor, especifique o tipo';
+              }
+              return null;
+            },
+          ),
+        ),
     ];
   }
 
