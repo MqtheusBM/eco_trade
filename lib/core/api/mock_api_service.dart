@@ -35,6 +35,7 @@ class MockApiService implements ApiService {
           "role":
               "producer", // O AuthService usa este campo para decidir o ecrã
           "created_at": "2025-09-05T10:00:00.000Z",
+          "cpf": "123.456.789-00",
           "collection_capacity_kg": 250,
           "accepted_waste_types": ["orgânico", "plástico", "papelão"]
         }
@@ -481,7 +482,7 @@ Parabéns! Durante este período, a sua atividade resultou num impacto positivo:
 
 - **Total de Resíduos Geridos:** **$totalKgColetados Kg** de resíduos desviados de aterros.
 - **Emissões de CO₂ Reduzidas:** **$co2Reduzido Kg** de emissões de CO₂ evitadas.
-- **Viagens de Camiões Evitadas:** **$viagensEvitadas** viagens de camiões de lixo evitadas.
+- **Viagens de Caminhões Evitadas:** **$viagensEvitadas** viagens de caminhões de lixo evitadas.
 """;
 
     return ImpactReportResponse(report: reportText);

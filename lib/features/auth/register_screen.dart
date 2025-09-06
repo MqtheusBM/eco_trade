@@ -32,6 +32,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _zipCodeController = TextEditingController();
   LatLng _selectedLocation = const LatLng(2.8235, -60.6758);
   final _capacityController = TextEditingController();
+  final _cpfController = TextEditingController();
 
   // Estado para os tipos de resíduos do Produtor
   Set<String> _selectedWasteTypes = {};
@@ -54,7 +55,54 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _zipCodeController.dispose();
     _capacityController.dispose();
     _otherWasteTypeController.dispose();
+    _cpfController.dispose();
     super.dispose();
+  }
+
+  String? _validateCPF(String? cpf) {
+    if (cpf == null || cpf.isEmpty) {
+      return 'Campo obrigatório';
+    }
+
+    String numbers = cpf.replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (numbers.length != 11) {
+      return 'CPF deve conter 11 dígitos';
+    }
+
+    if (RegExp(r'^(\d)\1*$').hasMatch(numbers)) {
+      return 'CPF inválido';
+    }
+
+    List<int> digits = numbers.split('').map((d) => int.parse(d)).toList();
+
+    int calcDv1() {
+      int sum = 0;
+      for (int i = 0; i < 9; i++) {
+        sum += digits[i] * (10 - i);
+      }
+      int remainder = sum % 11;
+      return (remainder < 2) ? 0 : 11 - remainder;
+    }
+
+    if (digits[9] != calcDv1()) {
+      return 'CPF inválido';
+    }
+
+    int calcDv2() {
+      int sum = 0;
+      for (int i = 0; i < 10; i++) {
+        sum += digits[i] * (11 - i);
+      }
+      int remainder = sum % 11;
+      return (remainder < 2) ? 0 : 11 - remainder;
+    }
+
+    if (digits[10] != calcDv2()) {
+      return 'CPF inválido';
+    }
+
+    return null;
   }
 
   Future<void> _submitForm() async {
@@ -106,6 +154,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               password: _passwordController.text,
               name: _nameController.text,
               phoneNumber: _phoneController.text,
+              cpf: _cpfController.text,
               collectionCapacity: int.tryParse(_capacityController.text) ?? 0,
               wasteTypes: finalWasteTypes,
             );
@@ -401,6 +450,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   List<Widget> _buildProdutorFields() {
     return [
+      const SizedBox(height: 12),
+      TextFormField(
+          controller: _cpfController,
+          decoration: const InputDecoration(
+              labelText: 'CPF', border: OutlineInputBorder()),
+          keyboardType: TextInputType.number,
+          validator: _validateCPF),
       const SizedBox(height: 12),
       TextFormField(
           controller: _capacityController,

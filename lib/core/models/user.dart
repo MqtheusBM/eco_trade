@@ -112,6 +112,7 @@ class Comercio extends AppUser {
 
 // Classe Produtor (sem alterações).
 class Produtor extends AppUser {
+  final String cpf;
   final int collectionCapacityKg;
   final List<String> acceptedWasteTypes;
 
@@ -120,6 +121,7 @@ class Produtor extends AppUser {
     required super.email,
     required super.name,
     required super.phoneNumber,
+    required this.cpf,
     required this.collectionCapacityKg,
     required this.acceptedWasteTypes,
   }) : super(profileType: ProfileType.produtor);
@@ -130,6 +132,7 @@ class Produtor extends AppUser {
       email: json['email'],
       name: json['name'],
       phoneNumber: json['phone_number'],
+      cpf: json['cpf'],
       collectionCapacityKg: json['collection_capacity_kg'],
       acceptedWasteTypes: List<String>.from(json['accepted_waste_types']),
     );
@@ -140,10 +143,10 @@ class Produtor extends AppUser {
       'email': email,
       'name': name,
       'phone_number': phoneNumber,
+      'cpf': cpf,
       'collection_capacity_kg': collectionCapacityKg,
       'accepted_waste_types': acceptedWasteTypes,
       'role': 'producer',
     };
   }
 }
-

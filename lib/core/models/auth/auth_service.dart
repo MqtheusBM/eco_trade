@@ -64,6 +64,7 @@ class AuthService {
     required String password,
     required String name,
     required String phoneNumber,
+    required String cpf,
     required int collectionCapacity,
     required List<String> wasteTypes,
   }) async {
@@ -72,6 +73,7 @@ class AuthService {
       email: email,
       name: name,
       phoneNumber: phoneNumber,
+      cpf: cpf,
       collectionCapacityKg: collectionCapacity,
       acceptedWasteTypes: wasteTypes,
     );
@@ -119,4 +121,3 @@ class AuthService {
     _userController.close();
   }
 }
-
