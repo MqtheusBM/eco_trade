@@ -1,10 +1,13 @@
 import 'package:eco_trade/core/models/lote.dart' show Localizacao;
 import 'package:eco_trade/core/models/user.dart';
 import 'package:eco_trade/core/models/providers.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geocoding/geocoding.dart';
 
 // NOVA CLASSE PARA FORMATAÇÃO DO TELEFONE
 class PhoneNumberFormatter extends TextInputFormatter {
@@ -120,6 +123,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _stateController = TextEditingController(text: 'RR');
   final _zipCodeController = TextEditingController();
   LatLng _selectedLocation = const LatLng(2.8235, -60.6758);
+  GoogleMapController? _mapController;
   final _capacityController = TextEditingController();
   final _cpfController = TextEditingController();
 
@@ -282,6 +286,159 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return 'A senha não cumpre todos os critérios';
     }
     return null;
+  }
+
+  // NOVA FUNÇÃO: Busca coordenadas com base no endereço
+  Future<void> _updateLocationFromAddress() async {
+    if (_streetController.text.isEmpty ||
+        _cityController.text.isEmpty ||
+        _stateController.text.isEmpty) {
+      return;
+    }
+
+    try {
+      String fullAddress = '${_streetController.text}, '
+          '${_neighborhoodController.text.isNotEmpty ? '${_neighborhoodController.text}, ' : ''}'
+          '${_cityController.text}, ${_stateController.text}, Brasil';
+
+      List<Location> locations = await locationFromAddress(fullAddress);
+
+      if (locations.isNotEmpty) {
+        LatLng newLocation = LatLng(
+          locations.first.latitude,
+          locations.first.longitude,
+        );
+
+        setState(() {
+          _selectedLocation = newLocation;
+        });
+
+        // Move a câmera do mapa para a nova localização
+        if (_mapController != null) {
+          await _mapController!.animateCamera(
+            CameraUpdate.newLatLngZoom(newLocation, 16),
+          );
+        }
+      }
+    } catch (e) {
+      // Se não conseguir buscar por endereço completo, tenta apenas por cidade
+      try {
+        String cityAddress =
+            '${_cityController.text}, ${_stateController.text}, Brasil';
+        List<Location> locations = await locationFromAddress(cityAddress);
+
+        if (locations.isNotEmpty) {
+          LatLng newLocation = LatLng(
+            locations.first.latitude,
+            locations.first.longitude,
+          );
+
+          setState(() {
+            _selectedLocation = newLocation;
+          });
+
+          // Move a câmera do mapa para a nova localização
+          if (_mapController != null) {
+            await _mapController!.animateCamera(
+              CameraUpdate.newLatLngZoom(newLocation, 14),
+            );
+          }
+        }
+      } catch (e) {
+        print('Erro ao buscar localização: $e');
+      }
+    }
+  }
+
+  // NOVA FUNÇÃO: Busca endereço com base nas coordenadas (geocodificação reversa)
+  Future<void> _updateAddressFromLocation(LatLng location) async {
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        location.latitude,
+        location.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks.first;
+
+        setState(() {
+          // Preenche os campos com as informações encontradas
+          if (place.street != null && place.street!.isNotEmpty) {
+            _streetController.text = place.street!;
+          }
+
+          // Preenche o número do endereço
+          if (place.subThoroughfare != null &&
+              place.subThoroughfare!.isNotEmpty) {
+            _numberController.text = place.subThoroughfare!;
+          }
+
+          if (place.subLocality != null && place.subLocality!.isNotEmpty) {
+            _neighborhoodController.text = place.subLocality!;
+          } else if (place.thoroughfare != null &&
+              place.thoroughfare!.isNotEmpty) {
+            // Se não tiver subLocalidade, usa a via/logradouro como bairro
+            _neighborhoodController.text = place.thoroughfare!;
+          }
+
+          // Preenchimento correto da cidade
+          if (place.locality != null && place.locality!.isNotEmpty) {
+            _cityController.text = place.locality!;
+          } else if (place.subAdministrativeArea != null &&
+              place.subAdministrativeArea!.isNotEmpty) {
+            // No Brasil, muitas vezes a cidade está em subAdministrativeArea
+            _cityController.text = place.subAdministrativeArea!;
+          }
+
+          if (place.country != null && place.country! == 'Brazil') {
+            // Para o Brasil, o estado está sempre em administrativeArea
+            if (place.administrativeArea != null &&
+                place.administrativeArea!.isNotEmpty) {
+              // Se o administrativeArea é um estado conhecido, usa a sigla
+              Map<String, String> estadoMap = {
+                'Roraima': 'RR',
+                'Amazonas': 'AM',
+                'Acre': 'AC',
+                'Rondônia': 'RO',
+                'Pará': 'PA',
+                'Amapá': 'AP',
+                'Tocantins': 'TO',
+                'Maranhão': 'MA',
+                'Piauí': 'PI',
+                'Ceará': 'CE',
+                'Rio Grande do Norte': 'RN',
+                'Paraíba': 'PB',
+                'Pernambuco': 'PE',
+                'Alagoas': 'AL',
+                'Sergipe': 'SE',
+                'Bahia': 'BA',
+                'Minas Gerais': 'MG',
+                'Espírito Santo': 'ES',
+                'Rio de Janeiro': 'RJ',
+                'São Paulo': 'SP',
+                'Paraná': 'PR',
+                'Santa Catarina': 'SC',
+                'Rio Grande do Sul': 'RS',
+                'Mato Grosso do Sul': 'MS',
+                'Mato Grosso': 'MT',
+                'Goiás': 'GO',
+                'Distrito Federal': 'DF',
+              };
+
+              String estado = estadoMap[place.administrativeArea] ??
+                  place.administrativeArea!;
+              _stateController.text = estado;
+            }
+          }
+
+          if (place.postalCode != null && place.postalCode!.isNotEmpty) {
+            _zipCodeController.text = place.postalCode!;
+          }
+        });
+      }
+    } catch (e) {
+      print('Erro ao buscar endereço: $e');
+    }
   }
 
   Future<void> _submitForm() async {
@@ -495,6 +652,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           controller: _streetController,
           decoration: const InputDecoration(
               labelText: 'Rua/Avenida', border: OutlineInputBorder()),
+          onChanged: (_) => _updateLocationFromAddress(),
           validator: (value) =>
               (value?.isEmpty ?? true) ? 'Campo obrigatório' : null),
       const SizedBox(height: 12),
@@ -512,6 +670,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 controller: _neighborhoodController,
                 decoration: const InputDecoration(
                     labelText: 'Bairro', border: OutlineInputBorder()),
+                onChanged: (_) => _updateLocationFromAddress(),
                 validator: (value) =>
                     (value?.isEmpty ?? true) ? 'Campo obrigatório' : null)),
       ]),
@@ -522,6 +681,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 controller: _cityController,
                 decoration: const InputDecoration(
                     labelText: 'Cidade', border: OutlineInputBorder()),
+                onChanged: (_) => _updateLocationFromAddress(),
                 validator: (value) =>
                     (value?.isEmpty ?? true) ? 'Campo obrigatório' : null)),
         const SizedBox(width: 12),
@@ -531,6 +691,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 controller: _stateController,
                 decoration: const InputDecoration(
                     labelText: 'Estado', border: OutlineInputBorder()),
+                onChanged: (_) => _updateLocationFromAddress(),
                 validator: (value) =>
                     (value?.isEmpty ?? true) ? 'Campo obrigatório' : null)),
       ]),
@@ -557,6 +718,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: GoogleMap(
+                  gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                    Factory<EagerGestureRecognizer>(
+                      () => EagerGestureRecognizer(),
+                    ),
+                  },
+                  onMapCreated: (GoogleMapController controller) {
+                    _mapController = controller;
+                  },
                   initialCameraPosition:
                       CameraPosition(target: _selectedLocation, zoom: 14),
                   markers: {
@@ -566,10 +735,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         draggable: true,
                         onDragEnd: (newPosition) {
                           setState(() => _selectedLocation = newPosition);
+                          _updateAddressFromLocation(newPosition);
                         })
                   },
                   onTap: (newPosition) {
                     setState(() => _selectedLocation = newPosition);
+                    _updateAddressFromLocation(newPosition);
                   }))),
     ];
   }

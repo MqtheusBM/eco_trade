@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:eco_trade/core/models/providers.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -118,7 +120,7 @@ class _LotCreationScreenState extends ConsumerState<LotCreationScreen> {
           );
 
       // Atualiza a lista no painel para que o novo lote apareça.
-      ref.refresh(meusLotesProvider);
+      ref.invalidate(meusLotesProvider);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -213,6 +215,11 @@ class _LotCreationScreenState extends ConsumerState<LotCreationScreen> {
                 decoration:
                     BoxDecoration(borderRadius: BorderRadius.circular(12)),
                 child: GoogleMap(
+                  gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                    Factory<EagerGestureRecognizer>(
+                      () => EagerGestureRecognizer(),
+                    ),
+                  },
                   initialCameraPosition:
                       CameraPosition(target: _selectedLocation, zoom: 14),
                   markers: {
