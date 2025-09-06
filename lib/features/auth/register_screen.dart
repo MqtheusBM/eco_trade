@@ -417,7 +417,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         onTap: _showWasteTypeDialog,
         child: InputDecorator(
           decoration: const InputDecoration(
-            labelText: 'Tipos de Resíduos Aceites',
+            labelText: 'Tipos de Resíduos Aceitos',
             border: OutlineInputBorder(),
           ),
           child: Row(
