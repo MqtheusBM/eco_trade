@@ -59,7 +59,7 @@ class ProfileScreen extends ConsumerWidget {
                       children: [
                         _buildInfoRow('Capacidade (Kg):',
                             user.collectionCapacityKg.toString()),
-                        _buildInfoRow('Resíduos Aceites:',
+                        _buildInfoRow('Resíduos Aceitos:',
                             user.acceptedWasteTypes.join(', ')),
                       ],
                     ),

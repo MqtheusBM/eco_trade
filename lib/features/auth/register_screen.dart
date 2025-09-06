@@ -2,8 +2,97 @@ import 'package:eco_trade/core/models/lote.dart' show Localizacao;
 import 'package:eco_trade/core/models/user.dart';
 import 'package:eco_trade/core/models/providers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+// NOVA CLASSE PARA FORMATAÇÃO DO TELEFONE
+class PhoneNumberFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    final text = newValue.text.replaceAll(RegExp(r'\D'), '');
+    var formattedText = '';
+
+    if (text.isNotEmpty) {
+      formattedText = '(';
+      if (text.length > 2) {
+        formattedText += '${text.substring(0, 2)}) ';
+        if (text.length > 7) {
+          formattedText +=
+              '${text.substring(2, 7)}-${text.substring(7, text.length > 11 ? 11 : text.length)}';
+        } else {
+          formattedText += text.substring(2);
+        }
+      } else {
+        formattedText += text;
+      }
+    }
+
+    return TextEditingValue(
+      text: formattedText,
+      selection: TextSelection.collapsed(offset: formattedText.length),
+    );
+  }
+}
+
+// NOVA CLASSE PARA FORMATAÇÃO DO CNPJ
+class CnpjInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    final text = newValue.text.replaceAll(RegExp(r'\D'), '');
+    var formatted = '';
+
+    if (text.length > 2) {
+      formatted = '${text.substring(0, 2)}.';
+      if (text.length > 5) {
+        formatted += '${text.substring(2, 5)}.';
+        if (text.length > 8) {
+          formatted += '${text.substring(5, 8)}/';
+          if (text.length > 12) {
+            formatted +=
+                '${text.substring(8, 12)}-${text.substring(12, text.length > 14 ? 14 : text.length)}';
+          } else {
+            formatted += text.substring(8);
+          }
+        } else {
+          formatted += text.substring(5);
+        }
+      } else {
+        formatted += text.substring(2);
+      }
+    } else {
+      formatted = text;
+    }
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
+// NOVA CLASSE PARA FORMATAÇÃO DO CEP
+class CepInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    final text = newValue.text.replaceAll(RegExp(r'\D'), '');
+    var formatted = '';
+    if (text.length > 5) {
+      formatted =
+          '${text.substring(0, 5)}-${text.substring(5, text.length > 8 ? 8 : text.length)}';
+    } else {
+      formatted = text;
+    }
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -39,6 +128,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _otherWasteTypeSelected = false;
   final _otherWasteTypeController = TextEditingController();
 
+  // NOVAS VARIÁVEIS DE ESTADO PARA VALIDAÇÃO DA SENHA
+  bool _isPasswordSixChars = false;
+  bool _hasLowercase = false;
+  bool _hasUppercase = false;
+  bool _hasSpecialCharacter = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Adiciona um listener para atualizar a UI de validação em tempo real
+    _passwordController.addListener(_updatePasswordValidation);
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -57,6 +159,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _otherWasteTypeController.dispose();
     _cpfController.dispose();
     super.dispose();
+  }
+
+  // NOVA FUNÇÃO: Atualiza as variáveis de estado da senha
+  void _updatePasswordValidation() {
+    final password = _passwordController.text;
+    setState(() {
+      _isPasswordSixChars = password.length >= 6;
+      _hasLowercase = password.contains(RegExp(r'[a-z]'));
+      _hasUppercase = password.contains(RegExp(r'[A-Z]'));
+      _hasSpecialCharacter =
+          password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+    });
   }
 
   String? _validateCPF(String? cpf) {
@@ -102,6 +216,71 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return 'CPF inválido';
     }
 
+    return null;
+  }
+
+  // NOVA FUNÇÃO DE VALIDAÇÃO DE CNPJ
+  String? _validateCNPJ(String? cnpj) {
+    if (cnpj == null || cnpj.isEmpty) {
+      return 'Campo obrigatório';
+    }
+
+    String numbers = cnpj.replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (numbers.length != 14) {
+      return 'CNPJ deve conter 14 dígitos';
+    }
+
+    if (RegExp(r'^(\d)\1*$').hasMatch(numbers)) {
+      return 'CNPJ inválido';
+    }
+
+    List<int> digits = numbers.split('').map((d) => int.parse(d)).toList();
+
+    int calcDV(List<int> digits, List<int> weights) {
+      int sum = 0;
+      for (int i = 0; i < digits.length; i++) {
+        sum += digits[i] * weights[i];
+      }
+      int remainder = sum % 11;
+      return (remainder < 2) ? 0 : 11 - remainder;
+    }
+
+    final weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    if (digits[12] != calcDV(digits.sublist(0, 12), weights1)) {
+      return 'CNPJ inválido';
+    }
+
+    final weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    if (digits[13] != calcDV(digits.sublist(0, 13), weights2)) {
+      return 'CNPJ inválido';
+    }
+
+    return null;
+  }
+
+  String? _validateCEP(String? cep) {
+    if (cep == null || cep.isEmpty) {
+      return 'Campo obrigatório';
+    }
+    String numbers = cep.replaceAll(RegExp(r'[^0-9]'), '');
+    if (numbers.length != 8) {
+      return 'CEP deve conter 8 dígitos';
+    }
+    return null;
+  }
+
+  // FUNÇÃO DE VALIDAÇÃO DE SENHA ATUALIZADA (para o submit do formulário)
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Campo obrigatório';
+    }
+    if (!_isPasswordSixChars ||
+        !_hasLowercase ||
+        !_hasUppercase ||
+        !_hasSpecialCharacter) {
+      return 'A senha não cumpre todos os critérios';
+    }
     return null;
   }
 
@@ -192,6 +371,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         },
       ),
       const SizedBox(height: 12),
+      // CAMPO DE SENHA ATUALIZADO COM A NOVA VALIDAÇÃO
       TextFormField(
         controller: _passwordController,
         decoration: InputDecoration(
@@ -209,9 +389,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ),
         ),
         obscureText: !_isPasswordVisible,
-        validator: (value) =>
-            (value?.isEmpty ?? true) ? 'Campo obrigatório' : null,
+        validator: _validatePassword, // Usando a nova função
       ),
+      const SizedBox(height: 8),
+      _buildPasswordValidationRules(), // NOVO WIDGET DE REGRAS
       const SizedBox(height: 12),
       TextFormField(
           controller: _nameController,
@@ -228,9 +409,55 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           decoration: const InputDecoration(
               labelText: 'Telefone', border: OutlineInputBorder()),
           keyboardType: TextInputType.phone,
-          validator: (value) =>
-              (value?.isEmpty ?? true) ? 'Campo obrigatório' : null),
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            PhoneNumberFormatter(),
+          ],
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Campo obrigatório';
+            }
+            if (value.replaceAll(RegExp(r'\D'), '').length < 10) {
+              return 'Número de telefone incompleto';
+            }
+            return null;
+          }),
     ];
+  }
+
+  // NOVO WIDGET PARA MOSTRAR AS REGRAS DA SENHA
+  Widget _buildPasswordValidationRules() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildValidationRow("Pelo menos 6 caracteres;", _isPasswordSixChars),
+        _buildValidationRow(
+            "Pelo menos uma letra minúscula (a-z);", _hasLowercase),
+        _buildValidationRow(
+            "Pelo menos uma letra maiúscula (A-Z);", _hasUppercase),
+        _buildValidationRow("Pelo menos um caractere especial (!@#\$...);",
+            _hasSpecialCharacter),
+      ],
+    );
+  }
+
+  // WIDGET AUXILIAR PARA CADA LINHA DE REGRA
+  Widget _buildValidationRow(String text, bool isValid) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Row(
+        children: [
+          Icon(
+            isValid ? Icons.check_circle : Icons.circle,
+            color: isValid ? Colors.green : Colors.grey,
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          Text(text,
+              style: TextStyle(color: isValid ? Colors.green : Colors.grey)),
+        ],
+      ),
+    );
   }
 
   List<Widget> _buildComercioFields() {
@@ -253,8 +480,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           decoration: const InputDecoration(
               labelText: 'CNPJ', border: OutlineInputBorder()),
           keyboardType: TextInputType.number,
-          validator: (value) =>
-              (value?.isEmpty ?? true) ? 'Campo obrigatório' : null),
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            CnpjInputFormatter(),
+          ],
+          validator: _validateCNPJ),
       const SizedBox(height: 16),
       const Divider(),
       const Padding(
@@ -309,8 +539,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           controller: _zipCodeController,
           decoration: const InputDecoration(
               labelText: 'CEP', border: OutlineInputBorder()),
-          validator: (value) =>
-              (value?.isEmpty ?? true) ? 'Campo obrigatório' : null),
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            CepInputFormatter(),
+          ],
+          validator: _validateCEP),
       const SizedBox(height: 16),
       const Text('Marque a sua localização no mapa:',
           style: TextStyle(fontWeight: FontWeight.bold)),
