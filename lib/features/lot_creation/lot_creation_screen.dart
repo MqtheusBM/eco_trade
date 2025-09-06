@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -217,6 +219,11 @@ class _LotCreationScreenState extends ConsumerState<LotCreationScreen> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: GoogleMap(
+              gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                Factory<EagerGestureRecognizer>(
+                  () => EagerGestureRecognizer(),
+                ),
+              },
               initialCameraPosition: const CameraPosition(
                 // Posição inicial do mapa (Boa Vista, RR)
                 target: LatLng(2.8235, -60.6758),
