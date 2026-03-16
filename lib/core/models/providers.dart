@@ -1,5 +1,5 @@
 import 'package:eco_trade/core/api/api_service.dart';
-import 'package:eco_trade/core/api/mock_api_service.dart';
+//import 'package:eco_trade/core/api/mock_api_service.dart';
 import 'package:eco_trade/core/api/real_api_service.dart'; // Importe a sua nova API
 import 'package:eco_trade/core/models/auth/auth_service.dart';
 import 'package:eco_trade/core/models/interested_producer.dart';
@@ -68,14 +68,9 @@ final authLoadingProvider = StateProvider<bool>((ref) => false);
 // ===================================================================
 
 /// Fornece a instância do nosso serviço de API.
-/// AQUI É ONDE TROCAMOS ENTRE A API FALSA (MOCK) E A REAL.
 final apiServiceProvider = Provider<ApiService>((ref) {
-  // Para desenvolvimento, usamos o serviço MOCK.
-  return MockApiService();
-
-  // Quando o backend estiver pronto, basta comentar a linha acima
-  // e descomentar a linha abaixo para usar a API real.
-  //return RealApiService();
+ 
+  return RealApiService();
 });
 
 /// Busca a lista de lotes criados pelo Comércio atualmente autenticado.

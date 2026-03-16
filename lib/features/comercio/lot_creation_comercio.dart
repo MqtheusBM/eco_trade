@@ -1,9 +1,9 @@
 import 'dart:io';
-
 import 'package:eco_trade/core/models/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
@@ -207,28 +207,51 @@ class _LotCreationScreenState extends ConsumerState<LotCreationScreen> {
               const Text('Marque a localização do lote:',
                   style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
+              
+              // Mapa OpenStreetMap (100% Gratuito)
               Container(
                 height: 250,
                 clipBehavior: Clip.antiAlias,
-                decoration:
-                    BoxDecoration(borderRadius: BorderRadius.circular(12)),
-                child: GoogleMap(
-                  initialCameraPosition:
-                      CameraPosition(target: _selectedLocation, zoom: 14),
-                  markers: {
-                    Marker(
-                      markerId: const MarkerId('selected-location'),
-                      position: _selectedLocation,
-                      draggable: true,
-                      onDragEnd: (newPosition) =>
-                          setState(() => _selectedLocation = newPosition),
-                    )
-                  },
-                  onTap: (newPosition) =>
-                      setState(() => _selectedLocation = newPosition),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade400),
+                ),
+                child: FlutterMap(
+                  options: MapOptions(
+                    // As suas coordenadas de Boa Vista!
+                    initialCenter: _selectedLocation,
+                    initialZoom: 15.0,
+                    // Quando o utilizador tocar no mapa, movemos o alfinete!
+                    onTap: (tapPosition, point) {
+                      setState(() => _selectedLocation = point);
+                    },
+                  ),
+                  children: [
+                    // Esta é a camada que carrega os desenhos das ruas gratuitamente
+                    TileLayer(
+                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.example.eco_trade',
+                    ),
+                    // Esta é a camada que desenha o nosso alfinete vermelho
+                    MarkerLayer(
+                      markers: [
+                        Marker(
+                          point: _selectedLocation,
+                          width: 40,
+                          height: 40,
+                          child: const Icon(
+                            Icons.location_on,
+                            color: Colors.red,
+                            size: 40,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 24),
+              
               // Botão de Submissão
               ElevatedButton(
                 onPressed: _isLoading ? null : _submitForm,

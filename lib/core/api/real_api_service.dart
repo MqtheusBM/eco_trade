@@ -16,8 +16,7 @@ class RealApiService implements ApiService {
   late final Dio _dio;
 
   // Substitua este URL pelo endereço do seu servidor.
-  final String _baseUrl = 'https://api-i2hos5vtgq-uc.a.run.app/api';
-
+  final String _baseUrl = 'http://192.168.3.10:8000/api';
   RealApiService() {
     // Configurações base do Dio.
     _dio = Dio(BaseOptions(
@@ -33,37 +32,82 @@ class RealApiService implements ApiService {
         .add(LogInterceptor(responseBody: true, requestBody: true));
   }
 
+  // Função auxiliar para tratar os erros da API de forma robusta
+  Exception _handleDioError(DioException e) {
+    if (e.response != null && e.response?.data != null) {
+      // Se a resposta do erro for um mapa (JSON) e tiver uma chave 'message'
+      if (e.response?.data is Map && e.response?.data['message'] != null) {
+        return Exception('Erro do servidor: ${e.response?.data['message']}');
+      }
+      // Se a resposta for qualquer outra coisa (ex: texto simples)
+      return Exception('Erro do servidor: ${e.response?.data}');
+    } else {
+      // Erro de conexão/rede.
+      return Exception('Falha na ligação. Verifique a sua internet.');
+    }
+  }
+
   @override
   Future<Map<String, dynamic>> signIn(String email, String password) async {
     try {
       final response = await _dio.post(
-        '/auth/signin',
+        '/auth/login/',
         data: {
           'email': email,
           'password': password,
         },
       );
-      // O dio lança uma exceção para códigos de status não-2xx,
-      // então se chegarmos aqui, a resposta foi bem-sucedida.
+
+      // 1. Pegamos o token que veio na resposta
+      final String token = response.data['token'];
+      
+      // 2. Ensinamos o Dio a usar este token em TODAS as próximas requisições!
+      _dio.options.headers['Authorization'] = 'Token $token';
+
       return response.data;
+      
     } on DioException catch (e) {
-      // Trata erros específicos do Dio (rede, timeouts, respostas 4xx/5xx).
       if (e.response != null) {
-        // O servidor respondeu com um erro.
         throw Exception('Erro do servidor: ${e.response?.data['message']}');
       } else {
-        // Erro de conexão/rede.
         throw Exception('Falha na ligação. Verifique a sua internet.');
       }
     } catch (e) {
-      // Outros erros inesperados.
+      throw Exception('Ocorreu um erro inesperado.');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> signUpComercio(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post(
+        '/auth/register/comercio/',
+        data: data,
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    } catch (e) {
+      throw Exception('Ocorreu um erro inesperado.');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> signUpProdutor(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post(
+        '/auth/register/produtor/',
+        data: data,
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    } catch (e) {
       throw Exception('Ocorreu um erro inesperado.');
     }
   }
 
   // --- MÉTODOS A IMPLEMENTAR ---
-  // Abaixo estão os outros métodos que precisa de implementar,
-  // ligando cada um ao seu respetivo endpoint no backend.
 
   @override
   Future<CompostAnalysisResponse> analyzeCompost(
@@ -78,13 +122,63 @@ class RealApiService implements ApiService {
   }
 
   @override
-  Future<Lote> createLote(
-      {required String imagePath,
-      required num weight,
-      required DateTime limitDate,
-      required double latitude,
-      required double longitude}) {
-    throw UnimplementedError('createLote ainda não implementado');
+  Future<Lote> createLote({
+    required String imagePath,
+    required num weight,
+    required DateTime limitDate,
+    required double latitude,
+    required double longitude,
+  }) async {
+    try {
+      // 1. Criamos um "Pacote de Correios" especial que aceita Ficheiros (FormData)
+      FormData formData = FormData.fromMap({
+        'weight': weight,
+        // O Django gosta das datas no formato universal ISO 8601 (ex: 2026-03-20T15:00:00)
+        'limit_date': limitDate.toIso8601String(),
+        'latitude': latitude,
+        'longitude': longitude,
+        
+        // 2. Anexamos a foto física que o utilizador tirou!
+        'image_url': await MultipartFile.fromFile(
+          imagePath, 
+          filename: 'residuos_${DateTime.now().millisecondsSinceEpoch}.jpg'
+        ),
+      });
+
+      // 3. Enviamos o pacote para a rota /lotes/ (Atenção à barra no final!)
+      final response = await _dio.post(
+        '/lotes/',
+        data: formData,
+      );
+
+      // 4. O Django devolve os dados do Lote recém-criado e nós transformamos em Objeto
+      return Lote.fromJson(response.data);
+      
+    } on DioException catch (e) {
+      if (e.response != null) {
+        throw Exception('Erro do servidor: ${e.response?.data}');
+      } else {
+        throw Exception('Falha na ligação ao enviar o lote.');
+      }
+    } catch (e) {
+      throw Exception('Ocorreu um erro inesperado ao criar o lote.');
+    }
+  }
+
+  @override
+  Future<void> deleteLote(String loteId) async {
+    try {
+      // Fazemos um pedido DELETE apontando para o ID específico do lote
+      await _dio.delete('/lotes/$loteId/');
+    } on DioException catch (e) {
+      if (e.response != null) {
+        throw Exception('Erro ${e.response?.statusCode}: Rota de exclusão não encontrada no servidor.');      
+      } else {
+        throw Exception('Falha na ligação ao tentar excluir.');
+      }
+    } catch (e) {
+      throw Exception('Erro inesperado ao excluir o lote.');
+    }
   }
 
   @override
@@ -116,8 +210,19 @@ class RealApiService implements ApiService {
   }
 
   @override
-  Future<List<LoteResumido>> getMeusLotes() {
-    throw UnimplementedError('getMeusLotes ainda não implementado');
+  Future<List<LoteResumido>> getMeusLotes() async {
+    try {
+      // Fazemos um pedido GET àquela rota que criámos no backend
+      final response = await _dio.get('/meus-lotes/');
+
+      // O Django devolve uma lista de JSONs. Vamos transformá-la numa Lista do Flutter
+      final List<dynamic> data = response.data;
+      return data.map((json) => LoteResumido.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw Exception('Erro ao carregar lotes: ${e.message}');
+    } catch (e) {
+      throw Exception('Erro inesperado ao carregar os lotes.');
+    }
   }
 
   @override
@@ -139,45 +244,5 @@ class RealApiService implements ApiService {
   Future<Map<String, dynamic>> rateScheduling(
       String schedulingId, RatingRequest request) {
     throw UnimplementedError('rateScheduling ainda não implementado');
-  }
-
-  @override
-  Future<Map<String, dynamic>> signUpComercio(Map<String, dynamic> data) async {
-    // Implemente a chamada ao endpoint de cadastro de comércio
-    try {
-      final response = await _dio.post(
-        '/auth/signup/comercio',
-        data: data,
-      );
-      return response.data;
-    } on DioException catch (e) {
-      if (e.response != null) {
-        throw Exception('Erro do servidor: ${e.response?.data['message']}');
-      } else {
-        throw Exception('Falha na ligação. Verifique a sua internet.');
-      }
-    } catch (e) {
-      throw Exception('Ocorreu um erro inesperado.');
-    }
-  }
-
-  @override
-  Future<Map<String, dynamic>> signUpProdutor(Map<String, dynamic> data) async {
-    // Implemente a chamada ao endpoint de cadastro de produtor
-    try {
-      final response = await _dio.post(
-        '/auth/signup/produtor',
-        data: data,
-      );
-      return response.data;
-    } on DioException catch (e) {
-      if (e.response != null) {
-        throw Exception('Erro do servidor: ${e.response?.data['message']}');
-      } else {
-        throw Exception('Falha na ligação. Verifique a sua internet.');
-      }
-    } catch (e) {
-      throw Exception('Ocorreu um erro inesperado.');
-    }
   }
 }

@@ -86,29 +86,27 @@ class AuthService {
     _userController.add(_currentUser);
   }
 
-  /// MÉTODO ATUALIZADO
+  //// MÉTODO ATUALIZADO
   Future<void> signIn(String email, String password) async {
     // 1. Chama o método signIn do nosso serviço de API
     final response = await _apiService.signIn(email, password);
 
     // 2. Extrai os dados do utilizador da resposta
     final userJson = response['user'] as Map<String, dynamic>;
-    final role = userJson['role'] as String;
 
-    // 3. TODO: Armazenar o token de forma segura (ex: flutter_secure_storage)
-    // final token = response['token'] as String;
-    // print('Token recebido: $token');
-
-    // 4. Cria a instância do utilizador correto com base na sua "role"
-    if (role == 'merchant') {
+    // 3. Como o backend não enviou o 'role', vamos ser detetives!
+    // Se o JSON tiver a chave 'tax_id', sabemos que é uma Padaria/Comércio.
+    // Se tiver a chave 'cpf', sabemos que é um Produtor.
+    if (userJson.containsKey('tax_id')) {
       _currentUser = Comercio.fromJson(userJson);
-    } else if (role == 'producer') {
+    } else if (userJson.containsKey('cpf')) {
       _currentUser = Produtor.fromJson(userJson);
     } else {
-      throw Exception('Role de utilizador desconhecida vinda da API: $role');
+      // Fallback de segurança
+      throw Exception('Perfil de utilizador inválido ou desconhecido.');
     }
 
-    // 5. Notifica o resto da aplicação que o utilizador mudou
+    // 4. Notifica o resto da aplicação que o utilizador mudou
     _userController.add(_currentUser);
   }
 

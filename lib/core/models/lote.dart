@@ -7,8 +7,8 @@ class Localizacao {
 
   factory Localizacao.fromJson(Map<String, dynamic> json) {
     return Localizacao(
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
+      latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
+      longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
@@ -43,13 +43,20 @@ class Lote {
 
   factory Lote.fromJson(Map<String, dynamic> json) {
     return Lote(
-      id: json['id'],
-      descriptionAI: json['descriptionAI'],
-      weight: json['weight'],
-      limitDate: DateTime.parse(json['limitDate']),
-      status: json['status'],
-      imageUrl: json['imageUrl'],
-      location: Localizacao.fromJson(json['location']),
+      // Proteção de ID e campos com nomes que vêm do Django
+      id: json['id']?.toString() ?? '',
+      descriptionAI: json['description'] ?? '', // O Django manda 'description'
+      weight: json['weight'] ?? 0.0,
+      limitDate: json['limit_date'] != null
+          ? DateTime.parse(json['limit_date'])
+          : DateTime.now(),
+      status: traduzirStatus(json['status']),
+      imageUrl: json['image_url'] ?? '', // Django manda 'image_url'
+      // A API manda lat e long soltos, não dentro de 'location'
+      location: Localizacao(
+        latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
+        longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
+      ),
     );
   }
 }
@@ -75,15 +82,46 @@ class LoteResumido {
   });
 
   factory LoteResumido.fromJson(Map<String, dynamic> json) {
+    // === O NOSSO DETETIVE ===
+    print('📦 LOTE RECEBIDO: ${json['description']}');
+    print('🔗 URL QUE VEIO DO DJANGO: ${json['image_url']}');
+    // ========================
+
     return LoteResumido(
-      id: json['id'],
-      description: json['description'],
-      location: Localizacao.fromJson(json['location']),
-      distance: json['distance'],
-      status: json['status'],
-      imageUrl: json['imageUrl'],
-      limitDate: DateTime.parse(json['limitDate']),
+      id: json['id']?.toString() ?? '',
+      description: json['description'] ?? '',
+      location: Localizacao(
+        latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
+        longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
+      ),
+      distance: json['distance']?.toString() ?? '...',
+      status: traduzirStatus(json['status']),
+      
+      // Vamos manter a nossa lógica do IP por enquanto
+      imageUrl: json['image_url'] ?? '',
+          
+      limitDate: json['limit_date'] != null ? DateTime.parse(json['limit_date']) : DateTime.now(),
     );
   }
 }
 
+/// Função inteligente para traduzir o status do sistema (inglês) para o utilizador (português)
+String traduzirStatus(String? statusBackend) {
+  if (statusBackend == null) return 'ativo';
+
+  switch (statusBackend.toLowerCase()) {
+    case 'scheduled':
+      return 'agendado';
+    case 'active':
+      return 'ativo';
+    case 'pending':
+      return 'pendente';
+    case 'confirmed':
+      return 'confirmado';
+    case 'completed':
+    case 'finished':
+      return 'finalizado';
+    default:
+      return statusBackend; // Se vier algo diferente, mostra o original
+  }
+}

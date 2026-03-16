@@ -116,7 +116,8 @@ class ComercioDashboardScreen extends ConsumerWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                   content: Text(response['message']!),
-                                  backgroundColor: const Color.fromRGBO(9, 132, 85, 0.8)),
+                                  backgroundColor:
+                                      const Color.fromRGBO(9, 132, 85, 0.8)),
                             );
                           } catch (e) {
                             Navigator.of(dialogContext).pop();
@@ -140,6 +141,55 @@ class ComercioDashboardScreen extends ConsumerWidget {
           },
         );
       },
+    );
+  }
+
+  /// Função para confirmar e excluir um lote
+  void _showDeleteConfirmation(BuildContext context, WidgetRef ref, String loteId) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning, color: Colors.red),
+            SizedBox(width: 8),
+            Text('Excluir Lote'),
+          ],
+        ),
+        content: const Text('Tem a certeza que deseja excluir este lote? Esta ação não pode ser desfeita e a foto também será apagada do sistema.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.of(dialogContext).pop(); // Fecha o diálogo de confirmação
+              
+              try {
+                // Chama a API para deletar
+                await ref.read(apiServiceProvider).deleteLote(loteId);
+                
+                // Atualiza a lista mágica do Riverpod
+                ref.refresh(meusLotesProvider);
+                
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Lote excluído com sucesso! 🗑️'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
+                );
+              }
+            },
+            child: const Text('Excluir', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -206,19 +256,39 @@ class ComercioDashboardScreen extends ConsumerWidget {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(10),
-                          child: Image.network(
-                            lote.imageUrl,
-                            width: 80,
-                            height: 80,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(
-                                    width: 80,
-                                    height: 80,
-                                    color: Colors.grey.shade200,
-                                    child: const Icon(Icons.broken_image,
-                                        color: Colors.grey, size: 40)),
-                          ),
+                          child: lote.imageUrl.isEmpty
+                              ? Container(
+                                  width: 80,
+                                  height: 80,
+                                  color: Colors.grey.shade200,
+                                  child: const Icon(Icons.image,
+                                      color: Colors.grey, size: 40),
+                                )
+                              // === CÓDIGO MELHORADO AQUI ===
+                              : Container(
+                                  width: 80,
+                                  height: 80,
+                                  color: Colors.grey
+                                      .shade100, // Um fundo sutil para preencher o vazio
+                                  child: Image.network(
+                                    lote.imageUrl,
+                                    // 1. Mudamos para cover: preenche o quadrado E corta as bordas
+                                    fit: BoxFit.cover,
+                                    // 2. Centralizamos a foto no quadrado
+                                    alignment: Alignment.center,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            Container(
+                                                width: 80,
+                                                height: 80,
+                                                color: Colors.grey.shade200,
+                                                child: const Icon(
+                                                    Icons.broken_image,
+                                                    color: Colors.grey,
+                                                    size: 40)),
+                                  ),
+                                ),
+                          // ==============================
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -256,6 +326,9 @@ class ComercioDashboardScreen extends ConsumerWidget {
                         ),
                         PopupMenuButton<String>(
                           onSelected: (value) {
+                            if (value == 'excluir') {
+                              _showDeleteConfirmation(context, ref, lote.id);
+                            }
                             if (value == 'interessados') {
                               Navigator.of(context).push(MaterialPageRoute(
                                   builder: (context) =>
@@ -316,6 +389,14 @@ class ComercioDashboardScreen extends ConsumerWidget {
                                     leading:
                                         Icon(Icons.star, color: Colors.amber),
                                     title: Text('Avaliar Agendamento')),
+                              ),
+                            if (lote.status == 'ativo')
+                              const PopupMenuItem<String>(
+                                value: 'excluir',
+                                child: ListTile(
+                                  leading: Icon(Icons.delete, color: Colors.red),
+                                  title: Text('Excluir Lote', style: TextStyle(color: Colors.red)),
+                                ),
                               ),
                           ],
                         ),

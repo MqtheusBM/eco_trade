@@ -8,6 +8,8 @@ import 'package:eco_trade/core/models/scheduling_confirmation.dart';
 import 'package:eco_trade/core/models/scheduling_creation.dart';
 import 'package:eco_trade/core/models/scheduling_details.dart';
 import 'package:eco_trade/core/models/user.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 /// A interface define o "contrato" que qualquer serviço de API (real ou mock)
 /// deve seguir. Se adicionar um novo método aqui, será obrigado a implementá-lo
@@ -76,5 +78,8 @@ abstract class ApiService {
 
   /// Gera um relatório de impacto com base num período de datas.
   Future<ImpactReportResponse> generateImpactReport(ImpactReportRequest request);
+
+  Future<void> deleteLote(String loteId);
 }
+
 

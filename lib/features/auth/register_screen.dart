@@ -398,7 +398,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           controller: _nameController,
           decoration: InputDecoration(
               labelText: _selectedProfile == ProfileType.comercio
-                  ? 'Nome Fantasia'
+                  ? 'Nome Comércio'
                   : 'Nome Completo',
               border: const OutlineInputBorder()),
           validator: (value) =>
@@ -430,12 +430,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildValidationRow("Pelo menos 6 caracteres;", _isPasswordSixChars),
+        _buildValidationRow("Pelo menos 6 caracteres", _isPasswordSixChars),
         _buildValidationRow(
-            "Pelo menos uma letra minúscula (a-z);", _hasLowercase),
+            "Pelo menos uma letra minúscula (a-z)", _hasLowercase),
         _buildValidationRow(
-            "Pelo menos uma letra maiúscula (A-Z);", _hasUppercase),
-        _buildValidationRow("Pelo menos um caractere especial (!@#\$...);",
+            "Pelo menos uma letra maiúscula (A-Z)", _hasUppercase),
+        _buildValidationRow("Pelo menos um caractere especial (!@#\$...)",
             _hasSpecialCharacter),
       ],
     );

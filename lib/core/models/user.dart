@@ -83,16 +83,25 @@ class Comercio extends AppUser {
   }) : super(profileType: ProfileType.comercio);
 
   // Construtor para criar um Comercio a partir de um JSON.
+ // Construtor para criar um Comercio a partir de um JSON.
   factory Comercio.fromJson(Map<String, dynamic> json) {
     return Comercio(
-      id: json['uid'], // MODIFICADO: De 'id' para 'uid' para corresponder à API
-      email: json['email'],
-      name: json['name'],
-      phoneNumber: json['phone_number'],
-      taxId: json['tax_id'],
-      legalName: json['legal_name'],
-      address: Address.fromJson(json['address']),
-      location: Localizacao.fromJson(json['location']),
+      // Converte o ID numérico do Django para String de forma segura
+      id: json['uid']?.toString() ?? '', 
+      email: json['email'] ?? '',
+      name: json['name'] ?? '',
+      phoneNumber: json['phone_number'] ?? '',
+      taxId: json['tax_id'] ?? '',
+      legalName: json['legal_name'] ?? '',
+      
+      // Protege contra nulos nos objetos aninhados
+      address: json['address'] != null 
+          ? Address.fromJson(json['address']) 
+          : Address(street: '', number: '', neighborhood: '', city: '', state: '', zipCode: ''),
+      
+      location: json['location'] != null 
+          ? Localizacao.fromJson(json['location']) 
+          : Localizacao(latitude: 0.0, longitude: 0.0),
     );
   }
   // ATUALIZADO: Adicionado método toJson para enviar dados para a API
@@ -126,15 +135,20 @@ class Produtor extends AppUser {
     required this.acceptedWasteTypes,
   }) : super(profileType: ProfileType.produtor);
 
-  factory Produtor.fromJson(Map<String, dynamic> json) {
+ factory Produtor.fromJson(Map<String, dynamic> json) {
     return Produtor(
-      id: json['uid'], // MODIFICADO: De 'id' para 'uid' para consistência
-      email: json['email'],
-      name: json['name'],
-      phoneNumber: json['phone_number'],
-      cpf: json['cpf'],
-      collectionCapacityKg: json['collection_capacity_kg'],
-      acceptedWasteTypes: List<String>.from(json['accepted_waste_types']),
+      // Converte o ID numérico do Django para String de forma segura
+      id: json['uid']?.toString() ?? '', 
+      email: json['email'] ?? '',
+      name: json['name'] ?? '',
+      phoneNumber: json['phone_number'] ?? '',
+      cpf: json['cpf'] ?? '',
+      collectionCapacityKg: json['collection_capacity_kg'] ?? 0,
+      
+      // Na lista, verificamos se ela existe antes de tentar converter
+      acceptedWasteTypes: json['accepted_waste_types'] != null 
+          ? List<String>.from(json['accepted_waste_types']) 
+          : [], 
     );
   }
   // ATUALIZADO: Adicionado método toJson para enviar dados para a API
