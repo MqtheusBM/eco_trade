@@ -5,6 +5,7 @@ import 'package:eco_trade/features/shared/impact_report_screen.dart';
 import 'package:eco_trade/features/shared/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:eco_trade/features/producer/producer_map_screen.dart';
 
 /// A tela principal para o utilizador do tipo "Produtor".
 /// Utiliza uma TabBar para separar a visualização dos seus agendamentos
@@ -60,9 +61,7 @@ class ProducerDashboardScreen extends ConsumerWidget {
             // Conteúdo da primeira aba: a lista de agendamentos do produtor.
             SchedulingList(),
 
-            // Conteúdo da segunda aba: a tela de busca de lotes por proximidade.
-            HomeScreen(),
-          ],
+            ProducerMapScreen(),          ],
         ),
       ),
     );

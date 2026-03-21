@@ -108,3 +108,19 @@ final schedulingDetailsProvider = FutureProvider.autoDispose
   final apiService = ref.watch(apiServiceProvider);
   return apiService.getSchedulingDetails(schedulingId);
 });
+
+final lotesDisponiveisProvider = FutureProvider<List<LoteResumido>>((ref) async {
+  // Passamos as coordenadas do centro de Boa Vista para o nosso "Radar"
+  final todosLotes = await ref.read(apiServiceProvider).getLotes(
+    lat: 2.8235,
+    long: -60.6758,
+  ); 
+  
+  // Filtramos para mostrar APENAS os que ainda estão 'ativos' (à espera de recolha)
+  return todosLotes.where((lote) => lote.status == 'ativo').toList();
+});
+
+// === PROVIDER DOS AGENDAMENTOS DO PRODUTOR ===
+final minhasColetasProvider = FutureProvider<List<dynamic>>((ref) async {
+  return await ref.read(apiServiceProvider).getMinhasColetas();
+});

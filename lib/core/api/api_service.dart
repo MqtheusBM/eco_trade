@@ -80,6 +80,12 @@ abstract class ApiService {
   Future<ImpactReportResponse> generateImpactReport(ImpactReportRequest request);
 
   Future<void> deleteLote(String loteId);
+
+  Future<void> agendarColeta(String loteId, DateTime proposedDate);
+
+  Future<List<dynamic>> getMinhasColetas();
+
+  Future<void> cancelarColeta(String agendamentoId);
 }
 
 

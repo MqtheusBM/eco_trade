@@ -86,7 +86,6 @@ class Comercio extends AppUser {
  // Construtor para criar um Comercio a partir de um JSON.
   factory Comercio.fromJson(Map<String, dynamic> json) {
     return Comercio(
-      // Converte o ID numérico do Django para String de forma segura
       id: json['uid']?.toString() ?? '', 
       email: json['email'] ?? '',
       name: json['name'] ?? '',
@@ -94,10 +93,18 @@ class Comercio extends AppUser {
       taxId: json['tax_id'] ?? '',
       legalName: json['legal_name'] ?? '',
       
-      // Protege contra nulos nos objetos aninhados
-      address: json['address'] != null 
+      // Verifica se é um dicionário (Map). Se for, converte normalmente.
+      // Se não for (se for um texto), coloca esse texto no campo da rua.
+      address: (json['address'] is Map<String, dynamic>) 
           ? Address.fromJson(json['address']) 
-          : Address(street: '', number: '', neighborhood: '', city: '', state: '', zipCode: ''),
+          : Address(
+              street: json['address']?.toString() ?? 'Endereço não disponível', 
+              number: '', 
+              neighborhood: '', 
+              city: '', 
+              state: '', 
+              zipCode: ''
+            ),
       
       location: json['location'] != null 
           ? Localizacao.fromJson(json['location']) 

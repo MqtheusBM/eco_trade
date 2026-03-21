@@ -70,6 +70,7 @@ class LoteResumido {
   final String status;
   final String imageUrl;
   final DateTime limitDate;
+  final num weight;
 
   LoteResumido({
     required this.id,
@@ -79,6 +80,7 @@ class LoteResumido {
     required this.status,
     required this.imageUrl,
     required this.limitDate,
+    required this.weight,
   });
 
   factory LoteResumido.fromJson(Map<String, dynamic> json) {
@@ -101,6 +103,7 @@ class LoteResumido {
       imageUrl: json['image_url'] ?? '',
           
       limitDate: json['limit_date'] != null ? DateTime.parse(json['limit_date']) : DateTime.now(),
+      weight: json['weight'] ?? 0.0,
     );
   }
 }
